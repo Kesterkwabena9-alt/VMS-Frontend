@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Request</title>
+    <link rel="stylesheet" href="assert/visitorstyle.css">
+    <link rel="stylesheet" href="assert/theme.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Back to visitor management home">
+            <img src="assert/images/logo.jpeg" alt="UTS Developers logo">
+            <span>UTS Developers</span>
+        </a>
+        <div class="time-date" aria-live="polite">
+            <strong id="current-time">--:--</strong>
+            <span id="current-date">Loading date...</span>
+        </div>
+    </header>
+
+    <main class="form-shell">
+        <a class="back-link" href="index.html">&larr; Back to dashboard</a>
+        <header class="form-header">
+            <p class="eyebrow">Visitor Management System</p>
+            <h1 id="form-title">Visitor Request</h1>
+            <p id="form-description">Enter the visitor's details to create a request.</p>
+        </header>
+
+        <form class="visitor-form" id="visitor-form" action="#" method="post">
+            <input id="workflow" name="workflow" type="hidden" value="check-in">
+
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="first_name">First name</label>
+                    <input id="first_name" name="first_name" type="text" autocomplete="given-name" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="last_name">Last name</label>
+                    <input id="last_name" name="last_name" type="text" autocomplete="family-name" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" autocomplete="email" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="phone_number">Phone number</label>
+                    <input id="phone_number" name="phone_number" type="tel" autocomplete="tel" required>
+                </div>
+
+                <div class="field-group full-width">
+                    <label for="address">Address <span>(optional)</span></label>
+                    <input id="address" name="address" type="text" autocomplete="street-address">
+                </div>
+
+                <div class="field-group">
+                    <label for="company">Company <span>(optional)</span></label>
+                    <input id="company" name="company" type="text" autocomplete="organization">
+                </div>
+
+                <div class="field-group">
+                    <label for="employee_id">Person to see</label>
+                    <select id="employee_id" name="employee_id" required>
+                        <option value="" selected disabled>Select an employee</option>
+                        <option value="employee-1">Employee 1</option>
+                        <option value="employee-2">Employee 2</option>
+                    </select>
+                </div>
+
+                <div class="field-group full-width">
+                    <label for="purpose_of_visit">Purpose of visit</label>
+                    <textarea id="purpose_of_visit" name="purpose_of_visit" rows="4" required></textarea>
+                </div>
+            </div>
+
+            <button class="submit-button" type="submit" >Submit visitor request</button>
+        </form>
+
+        <section class="badge-result" id="badge-result" aria-live="polite" hidden>
+            <p class="eyebrow">Request submitted</p>
+            <h2>Your visitor badge is ready</h2>
+            <div class="badge-card" id="badge-card">
+                <span class="badge-label">Badge number</span>
+                <strong class="badge-number" id="badge-number"></strong>
+                <span class="badge-visitor" id="badge-visitor"></span>
+                <span class="badge-workflow" id="badge-workflow"></span>
+            </div>
+            <div class="badge-actions">
+                <button class="secondary-button" id="download-badge" type="button">Download badge</button>
+                <button class="secondary-button" id="print-badge" type="button">Print badge</button>
+            </div>
+        </section>
+    </main>
+    <script src="scripts/theme.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/visitor.js"></script>
+    <script>
+        const timeElement = document.getElementById('current-time');
+        const dateElement = document.getElementById('current-date');
+
+        function updateDateTime() {
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            dateElement.textContent = now.toLocaleDateString([], {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    </script>
+</body>
+</html>

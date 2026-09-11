@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Management System</title>
+    <link rel="stylesheet" href="assert/style.css">
+    <link rel="stylesheet" href="assert/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Back to visitor management home">
+            <img src="assert/images/logo.jpeg" alt="UTS Developers logo">
+            <span>UTS Developers</span>
+        </a>
+        <div class="time-date" aria-live="polite">
+            <strong id="current-time">--:--</strong>
+            <span id="current-date">Loading date...</span>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <section class="welcome-copy">
+            <p class="eyebrow">Visitor Management System</p>
+            <h1>Welcome to Visitor Management System</h1>
+            <p>Please select an option below to proceed.</p>
+        </section>
+
+        <section class="action-cards" aria-label="Visitor actions">
+            <article class="action-card check-in-card">
+                <span class="card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-user-plus"></i>
+                </span>
+                <h2>Check In</h2>
+                <p>Are you a new visitor or returning to sign in?</p>
+                <a class="action-button" href="visitor.html?workflow=check-in">Check In Now</a>
+            </article>
+
+            <article class="action-card check-out-card">
+                <span class="card-icon" aria-hidden="true">
+                    <i class="fa-solid fa-user-minus"></i>
+                </span>
+                <h2>Check Out</h2>
+                <p>Are you leaving? Please sign-out here</p>
+                <a class="action-button" href="checkout.html">Check Out Now</a>
+            </article>
+        </section>
+    </main>
+
+    <footer>© 2026 UTS Developers. Visitor Management System.</footer>
+
+    <script src="scripts/theme.js"></script>
+    
+    <script>
+        const timeElement = document.getElementById('current-time');
+        const dateElement = document.getElementById('current-date');
+        const dateFormatter = new Intl.DateTimeFormat(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        function updateDateTime() {
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            dateElement.textContent = dateFormatter.format(now);
+        }
+
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    </script>
+</body>
+</html>

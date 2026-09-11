@@ -1,0 +1,116 @@
+body[data-theme="light"] {
+    --navy: #264653;
+    --midnight: #e8f1f2;
+    --blue: #2a9d8f;
+    --ink: #173042;
+    --muted: #526b78;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 76% 28%, rgba(42, 157, 143, 0.16), transparent 28%),
+        linear-gradient(135deg, #f5fbfb, #dceced 54%, #c8e1e2);
+}
+
+body[data-theme="light"]::before,
+body[data-theme="light"]::after {
+    border-color: rgba(42, 157, 143, 0.18);
+    background: linear-gradient(145deg, rgba(42, 157, 143, 0.12), rgba(255, 255, 255, 0.04));
+    box-shadow: 0 0 100px rgba(42, 157, 143, 0.1), inset 0 0 80px rgba(42, 157, 143, 0.06);
+}
+
+body[data-theme="light"] .topbar {
+    color: var(--ink);
+    border-bottom-color: rgba(38, 70, 83, 0.14);
+    background: rgba(255, 255, 255, 0.54);
+}
+
+body[data-theme="light"] .brand,
+body[data-theme="light"] h1,
+body[data-theme="light"] h2,
+body[data-theme="light"] .topbar,
+body[data-theme="light"] .time-date strong {
+    color: var(--ink);
+}
+
+body[data-theme="light"] .eyebrow,
+body[data-theme="light"] .back-link,
+body[data-theme="light"] a:not(.brand):not(.back-link) {
+    color: var(--blue);
+}
+
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .action-card,
+body[data-theme="light"] .login-shell,
+body[data-theme="light"] .badge-result,
+body[data-theme="light"] .form-card {
+    border-color: rgba(38, 70, 83, 0.16);
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.78);
+}
+
+body[data-theme="light"] .glass-card p,
+body[data-theme="light"] .action-card p,
+body[data-theme="light"] .intro,
+body[data-theme="light"] .time-date span,
+body[data-theme="light"] footer {
+    color: var(--muted);
+}
+
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    color: var(--ink);
+    border-color: rgba(38, 70, 83, 0.22);
+    background: rgba(255, 255, 255, 0.86);
+}
+
+body[data-theme="light"] button,
+body[data-theme="light"] .action-button,
+body[data-theme="light"] .primary-button,
+body[data-theme="light"] .submit-button {
+    border-color: var(--blue);
+}
+
+body[data-theme="light"] .sidebar {
+    border-right-color: rgba(38, 70, 83, 0.14);
+    background: rgba(255, 255, 255, 0.82);
+}
+
+body[data-theme="light"] .sidebar-brand,
+body[data-theme="light"] .nav-item,
+body[data-theme="light"] .sidebar-logout {
+    color: var(--ink);
+}
+
+body[data-theme="light"] .nav-item:hover,
+body[data-theme="light"] .nav-item.active {
+    color: var(--ink);
+    background: rgba(42, 157, 143, 0.14);
+    box-shadow: inset 3px 0 0 var(--blue), 0 0 20px rgba(42, 157, 143, 0.08);
+}
+
+body[data-theme="slate"] {
+    --navy: #34495e;
+    --midnight: #202b36;
+    --blue: #e09f3e;
+    --ink: #24313d;
+    --muted: #617080;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 76% 28%, rgba(224, 159, 62, 0.18), transparent 28%),
+        linear-gradient(135deg, #202b36, #34495e 54%, #536b7d);
+}
+
+body[data-theme="slate"] .eyebrow,
+body[data-theme="slate"] .back-link,
+body[data-theme="slate"] a:not(.brand):not(.back-link) {
+    color: #f0b65a;
+}
+
+body[data-theme="slate"] .glass-card,
+body[data-theme="slate"] .action-card,
+body[data-theme="slate"] .login-shell,
+body[data-theme="slate"] .badge-result,
+body[data-theme="slate"] .form-card {
+    background: rgba(242, 238, 230, 0.94);
+    color: var(--ink);
+}

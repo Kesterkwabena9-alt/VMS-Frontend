@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Dashboard | Visitors Management System</title>
+    <link rel="stylesheet" href="assert/administrator.css">
+    <link rel="stylesheet" href="assert/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-brand-mark">VMS</span>
+            <span>Admin</span>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Administrator navigation">
+            <a class="nav-item active" href="#dashboard" data-view="dashboard" aria-current="page">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-item" href="#visitor-history" data-view="history">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                <span>Visitor History</span>
+            </a>
+            <a class="nav-item" href="#manage-users" data-view="users">
+                <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                <span>Manage Users</span>
+            </a>
+            <a class="nav-item" href="#system-settings" data-view="settings">
+                <i class="fa-solid fa-gears" aria-hidden="true"></i>
+                <span>System Settings</span>
+            </a>
+        </nav>
+
+        <a class="sidebar-logout" href="login.html" onclick="logout()">
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+            <span>Logout</span>
+        </a>
+    </aside>
+
+    <header class="topbar">
+        <a class="brand" href="administrator.html" aria-label="Administrator dashboard home">
+            <img src="assert/images/logo.jpeg" alt="UTS Developers logo">
+            <span>UTS Developers</span>
+        </a>
+        <div class="header-actions">
+            <span class="role-badge">Administrator</span>
+        </div>
+    </header>
+
+    <main class="dashboard-shell">
+        <section class="dashboard-view" id="dashboard-view" data-view-panel="dashboard">
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">Visitor Management System</p>
+                <h1>Administrator Dashboard</h1>
+                <p id="greeting">Monitor visitor activity and workplace access.</p>
+            </div>
+            <button class="refresh-button" id="refresh-button" type="button">Refresh data</button>
+        </section>
+
+        <section class="summary-grid" id="summary-grid" aria-label="Visitor summary"></section>
+
+        <section class="content-grid">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Live activity</p>
+                        <h2>Current visitors</h2>
+                    </div>
+                    <span class="status-dot">Live</span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Visitor</th>
+                                <th>Company</th>
+                                <th>Person to see</th>
+                                <th>Checked in by</th>
+                                <th>Checked in</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="current-visitors-body"></tbody>
+                    </table>
+                </div>
+                <p class="empty-message" id="empty-message" hidden>No visitors are currently checked in.</p>
+            </article>
+        </section>
+        </section>
+        <section class="panel visitor-history" id="visitor-history" data-view-panel="history" aria-labelledby="history-title" hidden>
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Recorded activity</p>
+                    <h2 id="history-title">Visitor History</h2>
+                </div>
+                <span class="user-count" id="history-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Company</th>
+                            <th>Person to see</th>
+                            <th>Checked in by</th>
+                            <th>Check-in time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+            <p class="empty-message" id="history-empty" hidden>No visitor history is available.</p>
+        </section>
+        <section class="panel system-settings" id="system-settings" data-view-panel="settings" aria-labelledby="settings-title" hidden>
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">System preferences</p>
+                    <h2 id="settings-title">System Settings</h2>
+                </div>
+                <span class="settings-status" id="settings-status" aria-live="polite"></span>
+            </div>
+            <form class="settings-form" id="settings-form">
+                <div class="settings-field">
+                    <label for="organization-name">Organization name</label>
+                    <input id="organization-name" type="text" required>
+                </div>
+                <div class="settings-field">
+                    <label for="admin-contact-email">Admin Contact Email</label>
+                    <input id="admin-contact-email" type="email" required>
+                </div>
+                <div class="settings-field">
+                    <label for="visit-duration">Default visit duration</label>
+                    <select id="visit-duration">
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="120">2 hours</option>
+                        <option value="240">4 hours</option>
+                    </select>
+                </div>
+                <div class="settings-field">
+                    <label for="time-format">Time Format</label>
+                    <select id="time-format">
+                        <option value="12">12-hour</option>
+                        <option value="24">24-hour</option>
+                    </select>
+                </div>
+                <div class="settings-field">
+                    <label for="date-format">Date Format</label>
+                    <select id="date-format">
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                    </select>
+                </div>
+                <div class="settings-field">
+                    <label for="timezone">Timezone</label>
+                    <select id="timezone">
+                        <option value="Africa/Accra">Africa/Accra (GMT)</option>
+                        <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
+                        <option value="Europe/London">Europe/London</option>
+                        <option value="America/New_York">America/New York</option>
+                        <option value="Asia/Dubai">Asia/Dubai</option>
+                    </select>
+                </div>
+                <div class="settings-field">
+                    <label for="theme">Theme</label>
+                    <select id="theme">
+                        <option value="ocean">Ocean</option>
+                        <option value="light">Light</option>
+                        <option value="slate">Slate</option>
+                    </select>
+                </div>
+                <label class="settings-toggle">
+                    <input id="require-approval" type="checkbox">
+                    <span>Require approval for visitor requests</span>
+                </label>
+                <label class="settings-toggle">
+                    <input id="email-notifications" type="checkbox">
+                    <span>Enable visitor email notifications</span>
+                </label>
+                <div class="settings-actions">
+                    <button class="user-submit" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save settings</button>
+                    <button class="refresh-button" id="reset-settings" type="button">Reset defaults</button>
+                </div>
+            </form>
+        </section>
+        <section class="panel user-management" id="manage-users" data-view-panel="users" aria-labelledby="users-title" hidden>
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Access control</p>
+                    <h2 id="users-title">Manage Users</h2>
+                </div>
+                <button class="refresh-button" id="cancel-user-edit" type="button" hidden>Cancel edit</button>
+            </div>
+            <form class="user-form" id="user-form">
+                <input id="user-id" type="hidden">
+                <div class="user-form-field">
+                    <label for="user-name">Full name</label>
+                    <input id="user-name" type="text" placeholder="Enter the user's full name..." required></div>
+                <div class="user-form-field">
+                    <label for="user-email">Email address</label>
+                    <input id="user-email" type="email" placeholder="Enter email address..." required></div>
+                <div class="user-form-field">
+                    <label for="user-role">Role</label>
+                    <select id="user-role">
+                        <option>Receptionist</option>
+                        <option>Administrator</option>
+                    </select>
+                </div>
+                <button class="user-submit" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> <span id="user-submit-label">Add user</span></button>
+            </form>
+            <div class="user-toolbar">
+                <label class="user-search" for="user-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="sr-only">Search users</span><input id="user-search" type="search" placeholder="Search by name or email"></label>
+                <span class="user-count" id="user-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="users-body"></tbody>
+                </table>
+            </div>
+            <p class="empty-message" id="users-empty" hidden>No users match your search.</p>
+        </section>
+    </main>
+    <script src="scripts/theme.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/visitor.js"></script>
+    <script src="scripts/employees.js"></script>
+    <script src="scripts/users.js"></script>
+    <script src="scripts/administrator.js"></script>
+</body>
+</html>

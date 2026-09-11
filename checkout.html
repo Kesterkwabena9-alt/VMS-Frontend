@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Secure visitor checkout interface for UTS Developers.">
+    <title>Visitor Checkout | UTS Developers</title>
+    <link rel="stylesheet" href="assert/checkout.css">
+    <link rel="stylesheet" href="assert/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Back to visitor management home">
+            <img src="assert/images/logo.jpeg" alt="UTS Developers logo">
+            <span>UTS Developers</span>
+        </a>
+        <div class="time-date" aria-live="polite">
+            <strong id="current-time">--:--</strong>
+            <span id="current-date">Loading date...</span>
+        </div>
+    </header>
+    <main class="checkout-shell">
+        <a class="back-link" href="index.html">&larr; Back to dashboard</a>
+        <section class="page-intro" aria-labelledby="page-title">
+            <p class="eyebrow"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Reception desk</p>
+            <h1 id="page-title">Visitor Check Out</h1>
+            <p>Thank you for visiting. Search the visitor badge to complete sign-out.</p>
+        </section>
+
+        <section class="checkout-layout" aria-label="Visitor checkout">
+            <article class="glass-card search-card">
+                <div class="card-heading">
+                    <span class="icon-box"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="eyebrow">Badge Check</p>
+                        <h2>Search Visitor</h2>
+                    </div>
+                </div>
+                <form id="search-form" class="search-form">
+                    <label for="tag-number">Tag Number</label>
+                    <div class="input-with-icon">
+                        <i class="fa-solid fa-id-badge" aria-hidden="true"></i>
+                        <input id="tag-number" name="tag-number" type="search" placeholder="e.g 000" autocomplete="off" required>
+                    </div>
+                    <button class="primary-button" type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search visitor</button>
+                    <p id="search-message" class="form-message" role="status"></p>
+                </form>
+                <p class="sample-hint">Sample tags: <button type="button" class="tag-example" data-tag="001">001</button> <button type="button" class="tag-example" data-tag="002">002</button></p>
+            </article>
+
+            <article class="glass-card details-card" id="visitor-details" hidden>
+                <div class="card-heading">
+                    <span class="icon-box success-icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></span>
+                    <div>
+                        <p class="eyebrow">Visitor details</p>
+                        <h2>Active Visitor</h2>
+                    </div>
+                    <span class="status-badge" id="status-badge"><span></span> Active Badge</span>
+                </div>
+                <dl class="details-grid">
+                    <div><dt>Visitor Name</dt><dd id="visitor-name">-</dd></div>
+                    <div><dt>Tag Number</dt><dd id="visitor-tag">-</dd></div>
+                    <div><dt>Person Visited</dt><dd id="person-visited">-</dd></div>
+                    <div><dt>Department</dt><dd id="department">-</dd></div>
+                    <div><dt>Purpose of Visit</dt><dd id="purpose">-</dd></div>
+                    <div><dt>Check-In Time</dt><dd id="check-in-time">-</dd></div>
+                </dl>
+                <div class="checkout-actions">
+                    <div class="duration-box"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Visit duration</span><strong id="visit-duration">-</strong></div>
+                    <label class="checkbox-row" for="tag-returned"><input id="tag-returned" type="checkbox"><span>Tag Returned</span></label>
+                    <button class="checkout-button" id="checkout-button" type="button" disabled><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Check Out Visitor</button>
+                    <p id="checkout-message" class="success-message" role="status"></p>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer>© 2026 UTS Developers. Visitor Management System.</footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/visitor.js"></script>
+    <script src="scripts/theme.js"></script>
+    <script src="scripts/checkout.js"></script>
+</body>
+</html>
