@@ -55,9 +55,14 @@ function getCount(response) {
 }
 
 function isCurrentVisitor(visitor) {
-    const status = String(visitor.status || visitor.visitStatus || '').toLowerCase();
-    return !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.check_out_at &&
-        !visitor.checked_out_at && !['checked out', 'checked_out', 'checkout'].includes(status);
+    const status = String(visitor.status || visitor.visitStatus || '').toLowerCase().replace(/[-\s]/g, '_');
+    return !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.checkOutAt &&
+        !visitor.check_out_at && !visitor.checked_out_at &&
+        !['checked_out', 'checkout', 'completed'].includes(status);
+}
+
+function getVisitorKey(visitor) {
+    return String(visitor.id ?? visitor.visitorId ?? visitor.tag ?? visitor.tagNumber ?? `${visitor.firstName}-${visitor.lastName}-${visitor.email}`);
 }
 
 function getReferenceId(reference) {
@@ -138,11 +143,12 @@ async function loadDashboardData() {
     dashboardData.visitorsThisMonth = getCount(value(3));
     dashboardData.totalVisitors = visitorHistory.length || getCount(value(4));
     dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
-    const uncheckedVisitors = getCollection(value(5));
-    const currentVisitorSource = uncheckedVisitors.length > 0
-        ? uncheckedVisitors
-        : getCollection(value(4)).filter(isCurrentVisitor);
-    dashboardData.currentVisitors = currentVisitorSource.map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    const uncheckedVisitors = getCollection(value(5))
+        .map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    const currentVisitors = [...uncheckedVisitors, ...visitorHistory.filter(isCurrentVisitor)];
+    dashboardData.currentVisitors = Array.from(
+        new Map(currentVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
+    );
     dashboardData.visitorHistory = visitorHistory;
     renderDashboard();
 }

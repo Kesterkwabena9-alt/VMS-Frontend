@@ -40,6 +40,7 @@ searchForm.addEventListener('submit', async (event) => {
             ? ` ${typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}`
             : '';
         checkoutMessage.textContent = `${error.message || 'Unable to check out the visitor.'}${details}`;
+        searchMessage.textContent = error.message || 'Unable to check out the visitor.';
         checkoutButton.disabled = false;
     }
 });

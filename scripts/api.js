@@ -104,22 +104,13 @@ async function apiRequest(
          * Handle Spring Boot Custom Exceptions
          */
         if (!response.ok) {
-
+            const responseText = await response.text();
             let errorData = {};
 
             try {
-
-                errorData =
-                    await response.json();
-
+                errorData = responseText ? JSON.parse(responseText) : {};
             } catch {
-
-                throw {
-                    status:
-                        response.status,
-                    message:
-                        "Unexpected server error"
-                };
+                errorData = { message: responseText };
             }
 
             throw {
