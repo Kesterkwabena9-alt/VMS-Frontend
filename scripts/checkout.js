@@ -84,14 +84,17 @@ checkoutButton.addEventListener('click', async () => {
     if (!selectedVisitor || !tagReturned.checked) return;
 
     try {
-        await checkOutVisitor(selectedVisitor.tagNumber);
+        await checkOutVisitor(String(selectedVisitor.tagNumber));
         checkoutButton.disabled = true;
         tagReturned.disabled = true;
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
         checkoutMessage.textContent = `${selectedVisitor.name} has been checked out successfully.`;
         clearInterval(durationTimer);
     } catch (error) {
-        checkoutMessage.textContent = error.message || 'Unable to check out the visitor.';
+        const details = error.details
+            ? ` ${typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}`
+            : '';
+        checkoutMessage.textContent = `${error.message || 'Unable to check out the visitor.'}${details}`;
     }
 });
 

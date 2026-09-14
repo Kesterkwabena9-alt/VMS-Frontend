@@ -20,9 +20,10 @@ async function checkInVisitor(
 async function checkOutVisitor(
     tagNumber
 ) {
+    const tag = String(tagNumber).trim();
 
     return await apiRequest(
-        `/v1/visitors/check-out/${tagNumber}`,
+        `/v1/visitors/check-out?tag=${encodeURIComponent(tag)}`,
         "PUT"
     );
 }

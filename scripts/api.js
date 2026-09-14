@@ -77,9 +77,19 @@ async function apiRequest(
         }
 
         if (response.status === 403) {
+            const responseText = await response.text();
+            let errorData = {};
+
+            try {
+                errorData = responseText ? JSON.parse(responseText) : {};
+            } catch {
+                errorData = { message: responseText };
+            }
+
             throw {
                 status: response.status,
-                message: "You are not authorized to perform this action."
+                message: errorData.message || errorData.error || responseText || "You are not authorized to perform this action.",
+                details: errorData.details || errorData.errors
             };
         }
 
