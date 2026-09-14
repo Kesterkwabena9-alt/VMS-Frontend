@@ -61,21 +61,25 @@ function renderVisitor(visitor) {
     }, 60000);
 }
 
-searchForm.addEventListener('submit', async (event) => {
+searchForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    const requestedTag = tagInput.value.trim().toUpperCase();
-    try {
-        const response = await searchVisitors(requestedTag);
-        const results = Array.isArray(response) ? response : response?.content || response?.data || [];
-        const visitor = results[0];
-        if (!visitor) throw new Error('No active visitor found with that tag number.');
-        selectedTag = requestedTag;
-        searchMessage.textContent = '';
-        renderVisitor(visitor);
-    } catch (error) {
-        detailsCard.hidden = true;
-        searchMessage.textContent = error.message || 'Unable to search for the visitor.';
-    }
+    selectedTag = tagInput.value.trim();
+    if (!selectedTag) return;
+
+    selectedVisitor = { tagNumber: selectedTag, name: 'Visitor' };
+    document.getElementById('visitor-name').textContent = 'Visitor details will be confirmed by the server';
+    document.getElementById('visitor-tag').textContent = selectedTag;
+    document.getElementById('person-visited').textContent = '-';
+    document.getElementById('department').textContent = '-';
+    document.getElementById('purpose').textContent = '-';
+    document.getElementById('check-in-time').textContent = '-';
+    document.getElementById('visit-duration').textContent = '-';
+    detailsCard.hidden = false;
+    tagReturned.checked = false;
+    tagReturned.disabled = false;
+    checkoutButton.disabled = true;
+    checkoutMessage.textContent = '';
+    searchMessage.textContent = 'Confirm that the tag has been returned, then check out the visitor.';
 });
 
 tagReturned.addEventListener('change', () => {
