@@ -205,6 +205,7 @@ function normalizeUser(user) {
 
     return {
         ...user,
+        id: user.id ?? user.userId ?? user.user_id,
         name: user.name || `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim(),
         email: user.email || user.emailAddress || '',
         role: user.role || user.userRole || '-',
@@ -215,7 +216,7 @@ function normalizeUser(user) {
 function normalizeEmployee(employee) {
     return {
         ...employee,
-        id: employee.id || employee.employeeId,
+        id: employee.id ?? employee.employeeId ?? employee.employee_id,
         name: employee.name || `${employee.first_name || employee.firstName || ''} ${employee.last_name || employee.lastName || ''}`.trim(),
         email: employee.email || employee.emailAddress || '',
         department: employee.department || employee.departmentName || '-',
@@ -273,7 +274,7 @@ function setupUserManagement() {
         const email = document.getElementById('user-email').value.trim().toLowerCase();
         const role = document.getElementById('user-role').value;
 
-        if (editingUserId) {
+        if (editingUserId !== null && editingUserId !== undefined) {
             await updateUser(editingUserId, { name, email, role });
         } else {
             await createUser({ name, email, role });
@@ -296,6 +297,7 @@ function setupUserManagement() {
             document.getElementById('user-role').value = user.role;
             document.getElementById('user-submit-label').textContent = 'Save changes';
             document.getElementById('cancel-user-edit').hidden = false;
+            document.getElementById('user-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('user-name').focus();
         }
         if (actionButton.dataset.action === 'delete' && window.confirm(`Delete ${user.name}?`)) {
@@ -348,7 +350,9 @@ function setupEmployeeManagement() {
         };
 
         try {
-            if (editingEmployeeId) await updateEmployee(editingEmployeeId, employeeData);
+            if (editingEmployeeId !== null && editingEmployeeId !== undefined) {
+                await updateEmployee(editingEmployeeId, employeeData);
+            }
             else await createEmployee(employeeData);
             resetEmployeeForm();
             await loadEmployees();
@@ -373,6 +377,7 @@ function setupEmployeeManagement() {
             document.getElementById('employee-phone').value = employee.phone === '-' ? '' : employee.phone;
             document.getElementById('employee-submit-label').textContent = 'Save changes';
             document.getElementById('cancel-employee-edit').hidden = false;
+            document.getElementById('employee-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('employee-name').focus();
         }
 
