@@ -2,12 +2,8 @@ const searchForm = document.getElementById('search-form');
 const tagInput = document.getElementById('tag-number');
 const searchMessage = document.getElementById('search-message');
 const detailsCard = document.getElementById('visitor-details');
-const tagReturned = document.getElementById('tag-returned');
 const checkoutButton = document.getElementById('checkout-button');
 const checkoutMessage = document.getElementById('checkout-message');
-let selectedVisitor = null;
-let selectedTag = '';
-let durationTimer;
 
 function updateDateTime() {
     const now = new Date();
@@ -17,97 +13,41 @@ function updateDateTime() {
     .textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function formatDateTime(date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDuration(checkInTime) {
-    const minutes = Math.max(0, Math.floor((Date.now() - checkInTime.getTime()) / 60000));
-    const hours = Math.floor(minutes / 60);
-    return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
-}
-
-function normalizeVisitor(visitor) {
-    const checkInTime = new Date(visitor.checked_in_at || visitor.checkedInAt || visitor.checkInTime);
-    return {
-        ...visitor,
-        name: visitor.name || `${visitor.first_name || visitor.firstName || ''} ${visitor.last_name || visitor.lastName || ''}`.trim(),
-        tagNumber: visitor.tagNumber || visitor.tag_number || visitor.tag,
-        personVisited: visitor.personVisited || visitor.person_to_see || visitor.personToSee || '-',
-        department: visitor.department || '-',
-        purpose: visitor.purpose || visitor.purpose_of_visit || '-',
-        checkInTime
-    };
-}
-
-function renderVisitor(visitor) {
-    const normalizedVisitor = normalizeVisitor(visitor);
-    selectedVisitor = normalizedVisitor;
-    document.getElementById('visitor-name').textContent = normalizedVisitor.name;
-    document.getElementById('visitor-tag').textContent = normalizedVisitor.tagNumber;
-    document.getElementById('person-visited').textContent = normalizedVisitor.personVisited;
-    document.getElementById('department').textContent = normalizedVisitor.department;
-    document.getElementById('purpose').textContent = normalizedVisitor.purpose;
-    document.getElementById('check-in-time').textContent = formatDateTime(normalizedVisitor.checkInTime);
-    document.getElementById('visit-duration').textContent = formatDuration(normalizedVisitor.checkInTime);
-    detailsCard.hidden = false;
-    tagReturned.checked = false;
-    tagReturned.disabled = false;
-    checkoutButton.disabled = true;
-    checkoutMessage.textContent = '';
-    clearInterval(durationTimer);
-    durationTimer = setInterval(() => {
-        document.getElementById('visit-duration').textContent = formatDuration(normalizedVisitor.checkInTime);
-    }, 60000);
-}
-
-searchForm.addEventListener('submit', (event) => {
+searchForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    selectedTag = tagInput.value.trim();
-    if (!selectedTag) return;
+    const tag = tagInput.value.trim();
+    if (!tag) return;
 
-    selectedVisitor = { tagNumber: selectedTag, name: 'Visitor' };
-    document.getElementById('visitor-name').textContent = 'Visitor details will be confirmed by the server';
-    document.getElementById('visitor-tag').textContent = selectedTag;
-    document.getElementById('person-visited').textContent = '-';
-    document.getElementById('department').textContent = '-';
-    document.getElementById('purpose').textContent = '-';
-    document.getElementById('check-in-time').textContent = '-';
-    document.getElementById('visit-duration').textContent = '-';
-    detailsCard.hidden = false;
-    tagReturned.checked = false;
-    tagReturned.disabled = false;
     checkoutButton.disabled = true;
-    checkoutMessage.textContent = '';
-    searchMessage.textContent = 'Confirm that the tag has been returned, then check out the visitor.';
-});
-
-tagReturned.addEventListener('change', () => {
-    checkoutButton.disabled = !tagReturned.checked || !selectedVisitor;
-});
-
-checkoutButton.addEventListener('click', async () => {
-    if (!selectedVisitor || !tagReturned.checked) return;
-
+    searchMessage.textContent = '';
+    checkoutMessage.textContent = 'Checking out visitor...';
     try {
-        await checkOutVisitor(selectedTag || String(selectedVisitor.tagNumber));
-        checkoutButton.disabled = true;
-        tagReturned.disabled = true;
+        const response = await checkOutVisitor(tag);
+        const returnedTag = typeof response === 'string' || typeof response === 'number' ? response : response?.tag || tag;
+        detailsCard.hidden = false;
+        document.getElementById('visitor-name').textContent = 'Visitor checked out';
+        document.getElementById('visitor-tag').textContent = returnedTag;
+        document.getElementById('person-visited').textContent = '-';
+        document.getElementById('department').textContent = '-';
+        document.getElementById('purpose').textContent = '-';
+        document.getElementById('check-in-time').textContent = '-';
+        document.getElementById('visit-duration').textContent = '-';
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
-        checkoutMessage.textContent = `${selectedVisitor.name} has been checked out successfully.`;
-        clearInterval(durationTimer);
+        checkoutMessage.textContent = `Visitor with tag ${returnedTag} has been checked out successfully.`;
+        tagInput.value = '';
     } catch (error) {
         const details = error.details
             ? ` ${typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}`
             : '';
         checkoutMessage.textContent = `${error.message || 'Unable to check out the visitor.'}${details}`;
+        checkoutButton.disabled = false;
     }
 });
 
 document.querySelectorAll('.tag-example').forEach((button) => {
     button.addEventListener('click', () => {
         tagInput.value = button.dataset.tag;
-        searchForm.requestSubmit();
+        tagInput.focus();
     });
 });
 

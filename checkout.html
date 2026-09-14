@@ -43,7 +43,7 @@
                         <i class="fa-solid fa-id-badge" aria-hidden="true"></i>
                         <input id="tag-number" name="tag-number" type="search" placeholder="e.g 000" autocomplete="off" required>
                     </div>
-                    <button class="primary-button" type="submit"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Continue</button>
+                    <button class="primary-button" type="submit"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Check Out Visitor</button>
                     <p id="search-message" class="form-message" role="status"></p>
                 </form>
                 <p class="sample-hint">Sample tags: <button type="button" class="tag-example" data-tag="001">001</button> <button type="button" class="tag-example" data-tag="002">002</button></p>
@@ -68,8 +68,7 @@
                 </dl>
                 <div class="checkout-actions">
                     <div class="duration-box"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Visit duration</span><strong id="visit-duration">-</strong></div>
-                    <label class="checkbox-row" for="tag-returned"><input id="tag-returned" type="checkbox"><span>Tag Returned</span></label>
-                    <button class="checkout-button" id="checkout-button" type="button" disabled><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Check Out Visitor</button>
+                    <button class="checkout-button" id="checkout-button" type="submit" form="search-form" hidden>Check Out Visitor</button>
                     <p id="checkout-message" class="success-message" role="status"></p>
                 </div>
             </article>
