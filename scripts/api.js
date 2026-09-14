@@ -131,9 +131,16 @@ async function apiRequest(
         }
 
         /*
-         * Success Response
+         * Success responses may be JSON, plain text, or empty.
          */
-        return await response.json();
+        const responseText = await response.text();
+        if (!responseText) return null;
+
+        try {
+            return JSON.parse(responseText);
+        } catch {
+            return responseText;
+        }
 
     } catch (error) {
 

@@ -157,8 +157,13 @@ if (visitorForm) {
     loadEmployeeOptions();
 
     function showBadge(visitor) {
-        document.getElementById('badge-number').textContent = visitor.tagNumber || visitor.tag_number || 'Pending';
-        document.getElementById('badge-visitor').textContent = `${visitor.first_name} ${visitor.last_name}`;
+        const badgeNumber = typeof visitor === 'object'
+            ? visitor.tagNumber || visitor.tag_number || 'Pending'
+            : visitor || 'Pending';
+        document.getElementById('badge-number').textContent = badgeNumber;
+        document.getElementById('badge-visitor').textContent = typeof visitor === 'object'
+            ? `${visitor.first_name || visitor.firstName || ''} ${visitor.last_name || visitor.lastName || ''}`.trim()
+            : `${document.getElementById('first_name').value} ${document.getElementById('last_name').value}`.trim();
         document.getElementById('badge-workflow').textContent = workflow === 'check-out' ? 'Checked out' : 'Checked in';
         badgeResult.hidden = false;
     }
