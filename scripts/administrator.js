@@ -54,6 +54,12 @@ function getCount(response) {
     return Number(response?.count ?? response?.total ?? response?.value ?? 0);
 }
 
+function isCurrentVisitor(visitor) {
+    const status = String(visitor.status || visitor.visitStatus || '').toLowerCase();
+    return !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.check_out_at &&
+        !visitor.checked_out_at && !['checked out', 'checked_out', 'checkout'].includes(status);
+}
+
 function getReferenceId(reference) {
     if (reference && typeof reference === 'object') {
         return reference.id ?? reference.userId ?? reference.employeeId ?? reference.user_id ?? reference.employee_id;
@@ -132,7 +138,11 @@ async function loadDashboardData() {
     dashboardData.visitorsThisMonth = getCount(value(3));
     dashboardData.totalVisitors = visitorHistory.length || getCount(value(4));
     dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
-    dashboardData.currentVisitors = getCollection(value(5)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    const uncheckedVisitors = getCollection(value(5));
+    const currentVisitorSource = uncheckedVisitors.length > 0
+        ? uncheckedVisitors
+        : getCollection(value(4)).filter(isCurrentVisitor);
+    dashboardData.currentVisitors = currentVisitorSource.map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
     dashboardData.visitorHistory = visitorHistory;
     renderDashboard();
 }
