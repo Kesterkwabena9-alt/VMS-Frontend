@@ -88,7 +88,7 @@ async function apiRequest(
 
             throw {
                 status: response.status,
-                message: errorData.message || errorData.error || responseText || "You are not authorized to perform this action.",
+                message: errorData.message || errorData.error || responseText || `Request was rejected with HTTP ${response.status}.`,
                 details: errorData.details || errorData.errors
             };
         }

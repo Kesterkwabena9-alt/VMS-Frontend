@@ -6,6 +6,7 @@ const tagReturned = document.getElementById('tag-returned');
 const checkoutButton = document.getElementById('checkout-button');
 const checkoutMessage = document.getElementById('checkout-message');
 let selectedVisitor = null;
+let selectedTag = '';
 let durationTimer;
 
 function updateDateTime() {
@@ -68,6 +69,7 @@ searchForm.addEventListener('submit', async (event) => {
         const results = Array.isArray(response) ? response : response?.content || response?.data || [];
         const visitor = results[0];
         if (!visitor) throw new Error('No active visitor found with that tag number.');
+        selectedTag = requestedTag;
         searchMessage.textContent = '';
         renderVisitor(visitor);
     } catch (error) {
@@ -84,7 +86,7 @@ checkoutButton.addEventListener('click', async () => {
     if (!selectedVisitor || !tagReturned.checked) return;
 
     try {
-        await checkOutVisitor(String(selectedVisitor.tagNumber));
+        await checkOutVisitor(selectedTag || String(selectedVisitor.tagNumber));
         checkoutButton.disabled = true;
         tagReturned.disabled = true;
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
