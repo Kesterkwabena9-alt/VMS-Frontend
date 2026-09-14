@@ -6,6 +6,7 @@
     <title>Admin Login | Visitor Management System</title>
     <link rel="stylesheet" href="assert/loginstyle.css">
     <link rel="stylesheet" href="assert/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
     <header class="topbar">
@@ -29,7 +30,12 @@
             <input type="email" id="email" name="email" placeholder="Enter your email address" autocomplete="email" required>
 
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <div class="password-field">
+                <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                <button class="password-toggle" id="password-toggle" type="button" aria-label="Show password" title="Show password">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </button>
+            </div>
 
             <button type="submit" target="_blank">Login to VMS</button>
         </form>
@@ -64,6 +70,16 @@
         setInterval(updateDateTime, 1000);
 
     const loginForm = document.getElementById('login-form');
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('password-toggle');
+
+    passwordToggle.addEventListener('click', function() {
+        const isPasswordVisible = passwordInput.type === 'text';
+        passwordInput.type = isPasswordVisible ? 'password' : 'text';
+        passwordToggle.setAttribute('aria-label', isPasswordVisible ? 'Show password' : 'Hide password');
+        passwordToggle.setAttribute('title', isPasswordVisible ? 'Show password' : 'Hide password');
+        passwordToggle.innerHTML = `<i class="fa-solid ${isPasswordVisible ? 'fa-eye' : 'fa-eye-slash'}" aria-hidden="true"></i>`;
+    });
    
     loginForm.addEventListener('submit', async function(event) {
         event.preventDefault();

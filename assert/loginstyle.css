@@ -162,6 +162,36 @@ input {
     font: inherit;
 }
 
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 48px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    color: #40516b;
+    background: transparent;
+    transform: translateY(-50%);
+    box-shadow: none;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+    color: var(--midnight);
+    background: transparent;
+    box-shadow: none;
+    transform: translateY(-50%);
+}
+
 input::placeholder {
     color: #68778c;
     opacity: 1;
