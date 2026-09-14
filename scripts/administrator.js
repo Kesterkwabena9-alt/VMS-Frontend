@@ -220,13 +220,21 @@ function normalizeUser(user) {
 }
 
 function normalizeEmployee(employee) {
+    const firstName = employee.firstName ?? employee.firstname ?? employee.first_name ?? '';
+    const lastName = employee.lastName ?? employee.lastname ?? employee.last_name ?? '';
+    const fullName = employee.name || `${firstName} ${lastName}`.trim();
+    const nameParts = fullName.split(/\s+/);
+
     return {
         ...employee,
         id: employee.id ?? employee.employeeId ?? employee.employee_id,
-        name: employee.name || `${employee.first_name || employee.firstName || ''} ${employee.last_name || employee.lastName || ''}`.trim(),
+        firstName: firstName || nameParts.shift() || '',
+        lastName: lastName || nameParts.join(' '),
+        name: fullName,
         email: employee.email || employee.emailAddress || '',
         department: employee.department || employee.departmentName || '-',
-        phone: employee.phone || employee.phoneNumber || '-'
+        phoneNumber: employee.phoneNumber ?? employee.phone ?? employee.phone_number ?? '',
+        phone: employee.phoneNumber ?? employee.phone ?? employee.phone_number ?? '-'
     };
 }
 
@@ -390,10 +398,11 @@ function setupEmployeeManagement() {
     document.getElementById('employee-form').addEventListener('submit', async (event) => {
         event.preventDefault();
         const employeeData = {
-            name: document.getElementById('employee-name').value.trim(),
+            firstName: document.getElementById('employee-first-name').value.trim(),
+            lastName: document.getElementById('employee-last-name').value.trim(),
             email: document.getElementById('employee-email').value.trim().toLowerCase(),
             department: document.getElementById('employee-department').value.trim(),
-            phone: document.getElementById('employee-phone').value.trim()
+            phoneNumber: document.getElementById('employee-phone').value.trim()
         };
 
         try {
@@ -418,14 +427,15 @@ function setupEmployeeManagement() {
 
         if (actionButton.dataset.employeeAction === 'edit') {
             editingEmployeeId = employee.id;
-            document.getElementById('employee-name').value = employee.name;
+            document.getElementById('employee-first-name').value = employee.firstName;
+            document.getElementById('employee-last-name').value = employee.lastName;
             document.getElementById('employee-email').value = employee.email;
             document.getElementById('employee-department').value = employee.department === '-' ? '' : employee.department;
-            document.getElementById('employee-phone').value = employee.phone === '-' ? '' : employee.phone;
+            document.getElementById('employee-phone').value = employee.phoneNumber;
             document.getElementById('employee-submit-label').textContent = 'Save changes';
             document.getElementById('cancel-employee-edit').hidden = false;
             document.getElementById('employee-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            document.getElementById('employee-name').focus();
+            document.getElementById('employee-first-name').focus();
         }
 
         if (actionButton.dataset.employeeAction === 'delete' && window.confirm(`Delete ${employee.name}?`)) {
