@@ -286,6 +286,21 @@ function setupUserManagement() {
         const email = document.getElementById('user-email').value.trim().toLowerCase();
         const password = document.getElementById('user-password').value;
         const role = document.getElementById('user-role').value;
+        const requiredFields = [
+            ['first name', firstName],
+            ['last name', lastName],
+            ['email', email],
+            ['role', role]
+        ];
+        if (editingUserId === null || editingUserId === undefined) {
+            requiredFields.push(['password', password]);
+        }
+        const missingFields = requiredFields.filter(([, value]) => !value).map(([field]) => field);
+
+        if (missingFields.length > 0) {
+            alert(`Please complete: ${missingFields.join(', ')}.`);
+            return;
+        }
 
         userSubmit.disabled = true;
         try {

@@ -116,10 +116,10 @@ async function apiRequest(
                     errorData.errorCode,
 
                 message:
-                    errorData.message,
+                    errorData.message || errorData.error || `Request failed with status ${response.status}.`,
 
                 details:
-                    errorData.details,
+                    errorData.details || errorData.errors,
 
                 timeStamp:
                     errorData.timeStamp
