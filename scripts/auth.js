@@ -80,7 +80,7 @@ function saveAuthData(authData) {
  */
 function logout() {
     localStorage.clear();
-    window.location.replace("index.html");
+    window.location.replace("login.html");
 }
 
 /**
@@ -161,7 +161,7 @@ function routeUser(role) {
         case "RECEPTIONIST":
 
             window.location.href =
-                "index.html";
+                "receptionist.html";
             break;
 
         default:
@@ -211,14 +211,3 @@ function requireReceptionist() {
             "login.html";
     }
 }
-
-localStorage.setItem("token", response.token);
-
-localStorage.setItem("role", response.role);
-
-localStorage.setItem("email", response.email);
-
-localStorage.setItem(
-    "expirationTime",
-    response.expirationTime
-);

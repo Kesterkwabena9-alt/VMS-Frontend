@@ -19,9 +19,7 @@
         localStorage.removeItem("email");
         localStorage.removeItem("expirationTime");
 
-        window.location.replace("../index.html");
-        // Use "index.html" instead if dashboards
-        // are in the same folder as login page
+        window.location.replace("login.html");
     }
 
     // ==========================
@@ -83,7 +81,7 @@
     // Receptionist Protection
     // ==========================
     if (
-        currentPage === "receptionist.html"
+        ["index.html", "receptionist.html", "visitor.html", "checkout.html"].includes(currentPage)
         && role !== "RECEPTIONIST"
     ) {
 
