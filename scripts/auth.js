@@ -136,6 +136,28 @@ function getExpirationTime() {
     );
 }
 
+function getTokenExpirationTime() {
+    const token = getToken();
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (typeof payload.exp === 'number') return payload.exp * 1000;
+        } catch {
+            // Fall back to the expiration value returned by the API.
+        }
+    }
+
+    const storedExpiration = getExpirationTime();
+    if (!storedExpiration) return null;
+    const numericExpiration = Number(storedExpiration);
+    if (Number.isFinite(numericExpiration)) {
+        return numericExpiration < 1e12 ? numericExpiration * 1000 : numericExpiration;
+    }
+
+    const parsedExpiration = Date.parse(storedExpiration);
+    return Number.isNaN(parsedExpiration) ? null : parsedExpiration;
+}
+
 /**
  * Authentication Check
  */

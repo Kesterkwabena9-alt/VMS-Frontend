@@ -7,7 +7,6 @@
 
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-    const expirationTime = localStorage.getItem("expirationTime");
 
     // ==========================
     // Redirect Helper
@@ -34,19 +33,17 @@
     // ==========================
     // Check Token Expiry
     // ==========================
-    if (expirationTime) {
+    const tokenExpirationTime = typeof getTokenExpirationTime === "function"
+        ? getTokenExpirationTime()
+        : null;
 
-        const expiryDate = new Date(expirationTime);
-        const currentDate = new Date();
-
-        if (currentDate >= expiryDate) {
+    if (tokenExpirationTime && Date.now() >= tokenExpirationTime) {
 
             console.warn("Token expired.");
             alert("Your session has expired. Please login again.");
 
             redirectToLogin();
             return;
-        }
     }
 
     // ==========================

@@ -62,10 +62,7 @@ async function apiRequest(
         /*
          * Authentication / Authorization
          */
-        if (
-            response.status === 401 ||
-            response.status === 403
-        ) {
+        if (response.status === 401) {
 
             localStorage.clear();
 
@@ -77,6 +74,13 @@ async function apiRequest(
                 "login.html";
 
             return;
+        }
+
+        if (response.status === 403) {
+            throw {
+                status: response.status,
+                message: "You are not authorized to perform this action."
+            };
         }
 
         /*
