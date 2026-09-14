@@ -26,6 +26,16 @@ body[data-theme="light"] {
         linear-gradient(135deg, #f5fbfb, #dceced 54%, #c8e1e2);
 }
 
+
+.roboto-<uniquifier> {
+  font-family: "Roboto", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
+}
+
 body[data-theme="light"]::before,
 body[data-theme="light"]::after {
     border-color: rgba(42, 157, 143, 0.18);
