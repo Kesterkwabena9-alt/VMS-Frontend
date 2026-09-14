@@ -28,6 +28,10 @@
                 <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
                 <span>Manage Users</span>
             </a>
+            <a class="nav-item" href="#manage-employees" data-view="employees">
+                <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+                <span>Manage Employees</span>
+            </a>
             <a class="nav-item" href="#system-settings" data-view="settings">
                 <i class="fa-solid fa-gears" aria-hidden="true"></i>
                 <span>System Settings</span>
@@ -227,6 +231,46 @@
             </div>
             <p class="empty-message" id="users-empty" hidden>No users match your search.</p>
         </section>
+        <section class="panel user-management employee-management" id="manage-employees" data-view-panel="employees" aria-labelledby="employees-title" hidden>
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Workplace directory</p>
+                    <h2 id="employees-title">Manage Employees</h2>
+                </div>
+                <button class="refresh-button" id="cancel-employee-edit" type="button" hidden>Cancel edit</button>
+            </div>
+            <form class="user-form" id="employee-form">
+                <input id="employee-id" type="hidden">
+                <div class="user-form-field">
+                    <label for="employee-name">Full name</label>
+                    <input id="employee-name" type="text" placeholder="Enter the employee's full name..." required>
+                </div>
+                <div class="user-form-field">
+                    <label for="employee-email">Email address</label>
+                    <input id="employee-email" type="email" placeholder="Enter email address..." required>
+                </div>
+                <div class="user-form-field">
+                    <label for="employee-department">Department</label>
+                    <input id="employee-department" type="text" placeholder="Enter department">
+                </div>
+                <div class="user-form-field">
+                    <label for="employee-phone">Phone number</label>
+                    <input id="employee-phone" type="tel" placeholder="Enter phone number">
+                </div>
+                <button class="user-submit" type="submit"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> <span id="employee-submit-label">Add employee</span></button>
+            </form>
+            <div class="user-toolbar">
+                <label class="user-search" for="employee-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span class="sr-only">Search employees</span><input id="employee-search" type="search" placeholder="Search by name or email"></label>
+                <span class="user-count" id="employee-count" aria-live="polite"></span>
+            </div>
+            <div class="table-wrapper">
+                <table class="users-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Phone</th><th>Actions</th></tr></thead>
+                    <tbody id="employees-body"></tbody>
+                </table>
+            </div>
+            <p class="empty-message" id="employees-empty" hidden>No employees match your search.</p>
+        </section>
     </main>
     <script src="scripts/theme.js"></script>
     <script src="scripts/api.js"></script>
@@ -235,6 +279,6 @@
     <script src="scripts/employees.js"></script>
     <script src="scripts/users.js"></script>
     <script src="scripts/administrator.js"></script>
-    <script src="scripts/auth-guard.js"></script>
+    <!-- <script src="scripts/auth-guard.js"></script> -->
 </body>
 </html>

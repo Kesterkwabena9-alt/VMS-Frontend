@@ -22,6 +22,8 @@ requireAdmin();
 
 let users = [];
 let editingUserId = null;
+let employees = [];
+let editingEmployeeId = null;
 const defaultSettings = {
     organizationName: 'UTS Developers',
     adminContactEmail: 'admin@utsdevelopers.com',
@@ -196,6 +198,24 @@ async function loadUsers() {
     renderSummary();
 }
 
+function normalizeEmployee(employee) {
+    return {
+        ...employee,
+        id: employee.id || employee.employeeId,
+        name: employee.name || `${employee.first_name || employee.firstName || ''} ${employee.last_name || employee.lastName || ''}`.trim(),
+        email: employee.email || employee.emailAddress || '',
+        department: employee.department || employee.departmentName || '-',
+        phone: employee.phone || employee.phoneNumber || '-'
+    };
+}
+
+async function loadEmployees() {
+    const response = await getAllEmployees();
+    employees = getCollection(response).map(normalizeEmployee);
+    renderEmployees(document.getElementById('employee-search').value);
+    renderSummary();
+}
+
 function escapeHtml(value) {
     return String(value).replace(/[&<>'"]/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
@@ -267,6 +287,88 @@ function setupUserManagement() {
         if (actionButton.dataset.action === 'delete' && window.confirm(`Delete ${user.name}?`)) {
             await deleteUser(user.id);
             await loadUsers();
+        }
+    });
+}
+
+function renderEmployees(searchTerm = '') {
+    const employeesBody = document.getElementById('employees-body');
+    const employeesEmpty = document.getElementById('employees-empty');
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const visibleEmployees = employees.filter((employee) =>
+        `${employee.name} ${employee.email} ${employee.department}`.toLowerCase().includes(normalizedSearch)
+    );
+
+    employeesBody.innerHTML = visibleEmployees.map((employee) => `
+        <tr>
+            <td><strong>${escapeHtml(employee.name || '-')}</strong></td>
+            <td>${escapeHtml(employee.email)}</td>
+            <td>${escapeHtml(employee.department)}</td>
+            <td>${escapeHtml(employee.phone)}</td>
+            <td class="user-actions">
+                <button class="table-action" type="button" data-employee-action="edit" data-employee-id="${escapeHtml(employee.id)}" title="Edit employee"><i class="fa-solid fa-pen" aria-hidden="true"></i><span class="sr-only">Edit ${escapeHtml(employee.name)}</span></button>
+                <button class="table-action delete" type="button" data-employee-action="delete" data-employee-id="${escapeHtml(employee.id)}" title="Delete employee"><i class="fa-solid fa-trash" aria-hidden="true"></i><span class="sr-only">Delete ${escapeHtml(employee.name)}</span></button>
+            </td>
+        </tr>
+    `).join('');
+
+    employeesEmpty.hidden = visibleEmployees.length > 0;
+    document.getElementById('employee-count').textContent = `${employees.length} employee${employees.length === 1 ? '' : 's'}`;
+}
+
+function resetEmployeeForm() {
+    editingEmployeeId = null;
+    document.getElementById('employee-form').reset();
+    document.getElementById('employee-submit-label').textContent = 'Add employee';
+    document.getElementById('cancel-employee-edit').hidden = true;
+}
+
+function setupEmployeeManagement() {
+    document.getElementById('employee-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const employeeData = {
+            name: document.getElementById('employee-name').value.trim(),
+            email: document.getElementById('employee-email').value.trim().toLowerCase(),
+            department: document.getElementById('employee-department').value.trim(),
+            phone: document.getElementById('employee-phone').value.trim()
+        };
+
+        try {
+            if (editingEmployeeId) await updateEmployee(editingEmployeeId, employeeData);
+            else await createEmployee(employeeData);
+            resetEmployeeForm();
+            await loadEmployees();
+        } catch (error) {
+            alert(error.message || 'Unable to save employee.');
+        }
+    });
+
+    document.getElementById('employee-search').addEventListener('input', (event) => renderEmployees(event.target.value));
+    document.getElementById('cancel-employee-edit').addEventListener('click', resetEmployeeForm);
+    document.getElementById('employees-body').addEventListener('click', async (event) => {
+        const actionButton = event.target.closest('[data-employee-action]');
+        if (!actionButton) return;
+        const employee = employees.find((item) => String(item.id) === actionButton.dataset.employeeId);
+        if (!employee) return;
+
+        if (actionButton.dataset.employeeAction === 'edit') {
+            editingEmployeeId = employee.id;
+            document.getElementById('employee-name').value = employee.name;
+            document.getElementById('employee-email').value = employee.email;
+            document.getElementById('employee-department').value = employee.department === '-' ? '' : employee.department;
+            document.getElementById('employee-phone').value = employee.phone === '-' ? '' : employee.phone;
+            document.getElementById('employee-submit-label').textContent = 'Save changes';
+            document.getElementById('cancel-employee-edit').hidden = false;
+            document.getElementById('employee-name').focus();
+        }
+
+        if (actionButton.dataset.employeeAction === 'delete' && window.confirm(`Delete ${employee.name}?`)) {
+            try {
+                await deleteEmployee(employee.id);
+                await loadEmployees();
+            } catch (error) {
+                alert(error.message || 'Unable to delete employee.');
+            }
         }
     });
 }
@@ -351,6 +453,7 @@ document.getElementById('refresh-button')
 .addEventListener('click', renderDashboard);
 setupNavigation();
 setupUserManagement();
+setupEmployeeManagement();
 setupSettings();
 renderDashboard();
 loadUsers().catch((error) => {
@@ -359,4 +462,9 @@ loadUsers().catch((error) => {
     document.getElementById('users-empty').textContent = 'Unable to load users.';
 });
 loadDashboardData().catch((error) => console.error('Unable to load dashboard data:', error));
+loadEmployees().catch((error) => {
+    console.error('Unable to load employees:', error);
+    document.getElementById('employees-empty').hidden = false;
+    document.getElementById('employees-empty').textContent = 'Unable to load employees.';
+});
 
