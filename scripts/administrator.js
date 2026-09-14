@@ -54,16 +54,59 @@ function getCount(response) {
     return Number(response?.count ?? response?.total ?? response?.value ?? 0);
 }
 
-function normalizeVisitor(visitor) {
+function getReferenceId(reference) {
+    if (reference && typeof reference === 'object') {
+        return reference.id ?? reference.userId ?? reference.employeeId ?? reference.user_id ?? reference.employee_id;
+    }
+    return reference;
+}
+
+function getReferenceName(reference, fallback = '-') {
+    if (!reference) return fallback;
+    if (typeof reference === 'object') {
+        const firstName = reference.firstName ?? reference.firstname ?? reference.first_name ?? '';
+        const lastName = reference.lastName ?? reference.lastname ?? reference.last_name ?? '';
+        return reference.name || `${firstName} ${lastName}`.trim() || reference.email || fallback;
+    }
+    return String(reference);
+}
+
+function findReferenceName(reference, records, fallback) {
+    if (reference && typeof reference === 'object') {
+        return getReferenceName(reference, fallback);
+    }
+    const referenceId = getReferenceId(reference);
+    const record = records.find((item) => String(item.id) === String(referenceId));
+    return record ? record.name : fallback;
+}
+
+function normalizeVisitor(visitor, employees = [], users = []) {
+    const hostReference = visitor.host ?? visitor.hostId ?? visitor.employee ?? visitor.employeeId;
+    const checkedInByReference = visitor.checkedInByUser ?? visitor.checkedInBy ?? visitor.userId ?? visitor.checkedInById;
+
     return {
         ...visitor,
+        firstName: visitor.firstName || visitor.firstname || visitor.first_name || '',
+        lastName: visitor.lastName || visitor.lastname || visitor.last_name || '',
         first_name: visitor.first_name || visitor.firstName || '',
         last_name: visitor.last_name || visitor.lastName || '',
-        person_to_see: visitor.person_to_see || visitor.personToSee || visitor.personVisited || '-',
-        checked_in_by: visitor.checked_in_by || visitor.checkedInBy || '-',
-        checked_in_at: visitor.checked_in_at || visitor.checkedInAt || visitor.checkInTime,
-        checked_out_at: visitor.checked_out_at || visitor.checkedOutAt || visitor.checkOutTime,
-        status: visitor.status || visitor.visitStatus
+        email: visitor.email || '',
+        phoneNumber: visitor.phoneNumber || visitor.phone_number || visitor.phone || '',
+        address: visitor.address || '',
+        company: visitor.company || '',
+        purpose: visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '',
+        hostId: getReferenceId(hostReference),
+        userId: getReferenceId(checkedInByReference),
+        tag: visitor.tag ?? visitor.tagNumber ?? visitor.tag_number ?? '-',
+        person_to_see: visitor.person_to_see || visitor.personToSee || visitor.personVisited ||
+            findReferenceName(hostReference, employees, '-'),
+        checked_in_by: visitor.checked_in_by || visitor.checkedInByName ||
+            findReferenceName(checkedInByReference, users, 'Visitor self-service'),
+        checkedInTime: visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_at || visitor.checked_in_time,
+        checkOutTime: visitor.checkOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_at,
+        checked_in_at: visitor.checked_in_at || visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_time,
+        checked_out_at: visitor.checked_out_at || visitor.checkOutTime || visitor.checkedOutAt || visitor.checkOutAt,
+        status: visitor.status || visitor.visitStatus || (visitor.checkOutTime || visitor.checked_out_at ? 'Checked out' : 'Checked in')
     };
 }
 
@@ -75,18 +118,21 @@ async function loadDashboardData() {
         getTotalVisitorsThisMonth(),
         getAllVisitors(),
         getUncheckedVisitors(),
-        getAllEmployees()
+        getAllEmployees(),
+        getAllUsers()
     ]);
     const value = (index) => results[index].status === 'fulfilled' ? results[index].value : 0;
-    const visitorHistory = getCollection(value(4)).map(normalizeVisitor);
+    const employeeRecords = getCollection(value(6)).map(normalizeEmployee);
+    const userRecords = getCollection(value(7)).map(normalizeUser);
+    const visitorHistory = getCollection(value(4)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
     dashboardData.visitorsCheckedIn = getCount(value(0));
     dashboardData.visitorsToday = getCount(value(1));
     dashboardData.visitorsThisWeek = getCount(value(2));
     dashboardData.visitorsThisMonth = getCount(value(3));
     dashboardData.totalVisitors = visitorHistory.length || getCount(value(4));
-    dashboardData.totalEmployees = getCount(value(6));
-    dashboardData.currentVisitors = getCollection(value(5)).map(normalizeVisitor);
+    dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
+    dashboardData.currentVisitors = getCollection(value(5)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
     dashboardData.visitorHistory = visitorHistory;
     renderDashboard();
 }
@@ -463,7 +509,7 @@ function renderCurrentVisitors() {
             <td>${visitor.company}</td>
             <td>${visitor.person_to_see}</td>
             <td>${visitor.checked_in_by}</td>
-            <td>${visitor.checked_in_time}</td>
+            <td>${visitor.checked_in_at ? new Date(visitor.checked_in_at).toLocaleString() : escapeHtml(visitor.checked_in_time || '-')}</td>
             <td><span class="status-pill">Checked in</span></td>
         </tr>
     `).join('');
@@ -482,10 +528,15 @@ function renderVisitorHistory() {
                 <span class="visitor-name">${escapeHtml(`${visitor.first_name} ${visitor.last_name}`)}</span>
                 <span class="visitor-email">${escapeHtml(visitor.email)}</span>
             </td>
+            <td>${escapeHtml(visitor.phoneNumber || '-')}</td>
             <td>${escapeHtml(visitor.company || '-')}</td>
             <td>${escapeHtml(visitor.person_to_see || '-')}</td>
             <td>${escapeHtml(visitor.checked_in_by || 'Visitor self-service')}</td>
-            <td>${visitor.checked_in_at ? new Date(visitor.checked_in_at).toLocaleString() : escapeHtml(visitor.checked_in_time || '-')}</td>
+            <td>${escapeHtml(visitor.address || '-')}</td>
+            <td>${escapeHtml(visitor.purpose || '-')}</td>
+            <td>${escapeHtml(visitor.tag || '-')}</td>
+            <td>${visitor.checkedInTime ? new Date(visitor.checkedInTime).toLocaleString() : '-'}</td>
+            <td>${visitor.checkOutTime ? new Date(visitor.checkOutTime).toLocaleString() : '-'}</td>
             <td><span class="status-pill">${escapeHtml(visitor.status)}</span></td>
         </tr>
     `).join('');
@@ -527,7 +578,9 @@ function renderDashboard() {
 }
 
 document.getElementById('refresh-button')
-.addEventListener('click', renderDashboard);
+.addEventListener('click', async () => {
+    await loadDashboardData();
+});
 setupNavigation();
 setupUserManagement();
 setupEmployeeManagement();
@@ -543,5 +596,13 @@ loadEmployees().catch((error) => {
     console.error('Unable to load employees:', error);
     document.getElementById('employees-empty').hidden = false;
     document.getElementById('employees-empty').textContent = 'Unable to load employees.';
+});
+
+setInterval(() => {
+    if (!document.hidden) loadDashboardData().catch((error) => console.error('Unable to refresh dashboard:', error));
+}, 15000);
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadDashboardData().catch((error) => console.error('Unable to refresh dashboard:', error));
 });
 
