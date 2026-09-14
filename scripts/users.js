@@ -18,7 +18,7 @@ async function createUser(userData) {
 async function getUserById(userId) {
 
     return await apiRequest(
-        `/v1/users/{id}${userId}`
+        `/v1/users/${encodeURIComponent(userId)}`
     );
 }
 
@@ -42,7 +42,7 @@ async function updateUser(
 ) {
 
     return await apiRequest(
-        `/v1/users/update/{id}${userId}`,
+        `/v1/users/update/${encodeURIComponent(userId)}`,
         "PUT",
         userData
     );
@@ -56,7 +56,7 @@ async function deleteUser(
 ) {
 
     return await apiRequest(
-        `/v1/users/delete/{id}${userId}`,
+        `/v1/users/delete/${encodeURIComponent(userId)}`,
         "DELETE"
     );
 }

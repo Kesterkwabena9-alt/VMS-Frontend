@@ -55,7 +55,7 @@ async function searchVisitors(
 ) {
 
     return await apiRequest(
-        `/v1/visitors/search?keyword={keyword}${encodeURIComponent(searchTerm)}`
+        `/v1/visitors/search?keyword=${encodeURIComponent(searchTerm)}`
     );
 }
 

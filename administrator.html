@@ -34,11 +34,12 @@
             </a>
         </nav>
 
-        <a class="sidebar-logout" href="login.html" onclick="logout()">
+        <a class="sidebar-logout" href="index.html" onclick="logout(); return false;">
             <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
             <span>Logout</span>
         </a>
     </aside>
+    
 
     <header class="topbar">
         <a class="brand" href="administrator.html" aria-label="Administrator dashboard home">
@@ -234,5 +235,15 @@
     <script src="scripts/employees.js"></script>
     <script src="scripts/users.js"></script>
     <script src="scripts/administrator.js"></script>
+
+    <head>
+
+    <script src="../js/auth-guard.js"></script>
+
+    <!-- Other scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+
+</head>
 </body>
 </html>

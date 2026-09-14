@@ -79,25 +79,8 @@ function saveAuthData(authData) {
  * Logout User
  */
 function logout() {
-
-    localStorage.removeItem(
-        STORAGE_KEYS.TOKEN
-    );
-
-    localStorage.removeItem(
-        STORAGE_KEYS.EMAIL
-    );
-
-    localStorage.removeItem(
-        STORAGE_KEYS.ROLE
-    );
-
-    localStorage.removeItem(
-        STORAGE_KEYS.EXPIRATION
-    );
-
-    window.location.href =
-        "login.html";
+    localStorage.clear();
+    window.location.replace("index.html");
 }
 
 /**
@@ -228,3 +211,14 @@ function requireReceptionist() {
             "login.html";
     }
 }
+
+localStorage.setItem("token", response.token);
+
+localStorage.setItem("role", response.role);
+
+localStorage.setItem("email", response.email);
+
+localStorage.setItem(
+    "expirationTime",
+    response.expirationTime
+);
