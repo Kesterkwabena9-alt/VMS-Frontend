@@ -305,11 +305,11 @@ function setupUserManagement() {
         userSubmit.disabled = true;
         try {
             if (editingUserId !== null && editingUserId !== undefined) {
-                const userData = { firstName, lastName, email, role };
+                const userData = { firstname: firstName, lastname: lastName, email, role };
                 if (password) userData.password = password;
                 await updateUser(editingUserId, userData);
             } else {
-                await createUser({ firstName, lastName, email, password, role });
+                await createUser({ firstname: firstName, lastname: lastName, email, password, role });
             }
             resetUserForm();
             await loadUsers();
