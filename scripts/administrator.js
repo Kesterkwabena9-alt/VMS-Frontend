@@ -413,7 +413,8 @@ function setupEmployeeManagement() {
             resetEmployeeForm();
             await loadEmployees();
         } catch (error) {
-            alert(error.message || 'Unable to save employee.');
+            const details = error.details ? `\n${typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}` : '';
+            alert(`${error.message || 'Unable to save employee.'}${details}`);
         }
     });
 

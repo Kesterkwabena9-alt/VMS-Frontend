@@ -37,7 +37,7 @@ async function updateEmployee(
     employeeData
 ) {
     return await apiRequest(
-        `/v1/employees/${encodeURIComponent(employeeId)}`,
+        `/v1/employees/update/${encodeURIComponent(employeeId)}`,
         "PUT",
         employeeData
     );
