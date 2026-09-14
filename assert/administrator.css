@@ -662,7 +662,7 @@ td {
 
 .user-form {
     display: grid;
-    grid-template-columns: 1.1fr 1.3fr 0.9fr auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
     gap: 14px;
     align-items: end;
     margin-bottom: 24px;

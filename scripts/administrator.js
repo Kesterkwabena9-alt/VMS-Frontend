@@ -202,11 +202,17 @@ async function loadUsers() {
 function normalizeUser(user) {
     const rawStatus = user.status ?? user.userStatus ?? user.accountStatus;
     const isActive = user.active ?? user.enabled ?? user.isActive;
+    const firstName = user.firstName ?? user.first_name ?? user.firstname ?? '';
+    const lastName = user.lastName ?? user.last_name ?? user.lastname ?? '';
+    const fullName = user.name || `${firstName} ${lastName}`.trim();
+    const nameParts = fullName.split(/\s+/);
 
     return {
         ...user,
         id: user.id ?? user.userId ?? user.user_id,
-        name: user.name || `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim(),
+        firstName: firstName || nameParts.shift() || '',
+        lastName: lastName || nameParts.join(' '),
+        name: fullName,
         email: user.email || user.emailAddress || '',
         role: user.role || user.userRole || '-',
         status: rawStatus || (typeof isActive === 'boolean' ? (isActive ? 'Active' : 'Inactive') : 'Active')
@@ -270,14 +276,15 @@ function resetUserForm() {
 function setupUserManagement() {
     document.getElementById('user-form').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const name = document.getElementById('user-name').value.trim();
+        const firstName = document.getElementById('user-first-name').value.trim();
+        const lastName = document.getElementById('user-last-name').value.trim();
         const email = document.getElementById('user-email').value.trim().toLowerCase();
         const role = document.getElementById('user-role').value;
 
         if (editingUserId !== null && editingUserId !== undefined) {
-            await updateUser(editingUserId, { name, email, role });
+            await updateUser(editingUserId, { firstName, lastName, email, role });
         } else {
-            await createUser({ name, email, role });
+            await createUser({ firstName, lastName, email, role });
         }
         resetUserForm();
         await loadUsers();
@@ -292,13 +299,14 @@ function setupUserManagement() {
         if (!user) return;
         if (actionButton.dataset.action === 'edit') {
             editingUserId = user.id;
-            document.getElementById('user-name').value = user.name;
+            document.getElementById('user-first-name').value = user.firstName;
+            document.getElementById('user-last-name').value = user.lastName;
             document.getElementById('user-email').value = user.email;
             document.getElementById('user-role').value = user.role;
             document.getElementById('user-submit-label').textContent = 'Save changes';
             document.getElementById('cancel-user-edit').hidden = false;
             document.getElementById('user-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            document.getElementById('user-name').focus();
+            document.getElementById('user-first-name').focus();
         }
         if (actionButton.dataset.action === 'delete' && window.confirm(`Delete ${user.name}?`)) {
             try {
