@@ -193,9 +193,23 @@ function renderSummary() {
 
 async function loadUsers() {
     const response = await getAllUsers();
-    users = Array.isArray(response) ? response : response?.content || response?.data || [];
+    const userCollection = Array.isArray(response) ? response : response?.content || response?.data || [];
+    users = userCollection.map(normalizeUser);
     renderUsers(document.getElementById('user-search').value);
     renderSummary();
+}
+
+function normalizeUser(user) {
+    const rawStatus = user.status ?? user.userStatus ?? user.accountStatus;
+    const isActive = user.active ?? user.enabled ?? user.isActive;
+
+    return {
+        ...user,
+        name: user.name || `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim(),
+        email: user.email || user.emailAddress || '',
+        role: user.role || user.userRole || '-',
+        status: rawStatus || (typeof isActive === 'boolean' ? (isActive ? 'Active' : 'Inactive') : 'Active')
+    };
 }
 
 function normalizeEmployee(employee) {
@@ -233,7 +247,7 @@ function renderUsers(searchTerm = '') {
             <td><strong>${escapeHtml(user.name)}</strong></td>
             <td>${escapeHtml(user.email)}</td>
             <td>${escapeHtml(user.role)}</td>
-            <td><span class="user-status ${user.status === 'Active' ? 'active' : 'inactive'}">${escapeHtml(user.status)}</span></td>
+            <td><span class="user-status ${user.status === 'Active' ? 'active' : 'inactive'}">${escapeHtml(user.status || 'Active')}</span></td>
             <td class="user-actions">
                 <button class="table-action" type="button" data-action="edit" data-user-id="${escapeHtml(user.id)}" title="Edit user"><i class="fa-solid fa-pen" aria-hidden="true"></i><span class="sr-only">Edit ${escapeHtml(user.name)}</span></button>
                 <button class="table-action delete" type="button" data-action="delete" data-user-id="${escapeHtml(user.id)}" title="Delete user"><i class="fa-solid fa-trash" aria-hidden="true"></i><span class="sr-only">Delete ${escapeHtml(user.name)}</span></button>
