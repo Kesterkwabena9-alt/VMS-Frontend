@@ -6,7 +6,7 @@
 async function createUser(userData) {
 
     return await apiRequest(
-        "/v1/users",
+        "/v1/users/sign-up",
         "POST",
         userData
     );
@@ -18,7 +18,7 @@ async function createUser(userData) {
 async function getUserById(userId) {
 
     return await apiRequest(
-        `/v1/users/${userId}`
+        `/v1/users/{id}${userId}`
     );
 }
 
@@ -38,10 +38,11 @@ async function getAllUsers() {
 async function updateUser(
     userId,
     userData
+    
 ) {
 
     return await apiRequest(
-        `/v1/users/${userId}`,
+        `/v1/users/update/{id}${userId}`,
         "PUT",
         userData
     );
@@ -55,7 +56,7 @@ async function deleteUser(
 ) {
 
     return await apiRequest(
-        `/v1/users/${userId}`,
+        `/v1/users/delete/{id}${userId}`,
         "DELETE"
     );
 }
@@ -66,6 +67,6 @@ async function deleteUser(
 async function getTotalUsers() {
 
     return await apiRequest(
-        "/v1/users/count"
+        "/v1/users/stats/count"
     );
 }

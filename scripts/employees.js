@@ -5,7 +5,7 @@
  */
 async function createEmployee(employeeData) {
     return await apiRequest(
-        "/v1/employees",
+        "/v1/employees/add",
         "POST",
         employeeData
     );
@@ -16,7 +16,7 @@ async function createEmployee(employeeData) {
  */
 async function getEmployeeById(employeeId) {
     return await apiRequest(
-        `/v1/employees/${employeeId}`
+        `/v1/employees/{id}${employeeId}`
     );
 }
 
@@ -37,20 +37,20 @@ async function updateEmployee(
     employeeData
 ) {
     return await apiRequest(
-        `/v1/employees/${employeeId}`,
+        `/v1/employees/{id}${employeeId}`,
         "PUT",
         employeeData
     );
 }
 
 /**
- * Delete Employee
+ * Delete an Employee
  */
 async function deleteEmployee(
     employeeId
 ) {
     return await apiRequest(
-        `/v1/employees/${employeeId}`,
+        `/v1/employees/{id}${employeeId}`,
         "DELETE"
     );
 }
@@ -62,7 +62,7 @@ async function searchEmployees(
     searchTerm
 ) {
     return await apiRequest(
-        `/v1/employees/search?keyword=${encodeURIComponent(searchTerm)}`
+        `/v1/employees/search?keyword={keyword}${encodeURIComponent(searchTerm)}`
     );
 }
 
@@ -71,6 +71,6 @@ async function searchEmployees(
  */
 async function getTotalEmployees() {
     return await apiRequest(
-        "/v1/employees/count"
+        "/v1/employees/stats/total"
     );
 }

@@ -55,7 +55,7 @@ async function searchVisitors(
 ) {
 
     return await apiRequest(
-        `/v1/visitors/search?keyword=${encodeURIComponent(searchTerm)}`
+        `/v1/visitors/search?keyword={keyword}${encodeURIComponent(searchTerm)}`
     );
 }
 
@@ -68,7 +68,7 @@ async function getVisitorsByDateRange(
 ) {
 
     return await apiRequest(
-        `/v1/visitors/date-range?startDate=${startDate}&endDate=${endDate}`
+        `/v1/visitors/by-date`
     );
 }
 
@@ -78,7 +78,7 @@ async function getVisitorsByDateRange(
 async function getTotalVisitorsToday() {
 
     return await apiRequest(
-        "/v1/visitors/total/today"
+        "/v1/visitors/stats/today"
     );
 }
 
@@ -88,7 +88,7 @@ async function getTotalVisitorsToday() {
 async function getCheckedInVisitorsToday() {
 
     return await apiRequest(
-        "/v1/visitors/checked-in/today"
+        "/v1/visitors/stats/today"
     );
 }
 
@@ -98,7 +98,7 @@ async function getCheckedInVisitorsToday() {
 async function getTotalVisitorsThisWeek() {
 
     return await apiRequest(
-        "/v1/visitors/total/week"
+        "/v1/visitors/stats/week"
     );
 }
 
@@ -108,7 +108,7 @@ async function getTotalVisitorsThisWeek() {
 async function getTotalVisitorsThisMonth() {
 
     return await apiRequest(
-        "/v1/visitors/total/month"
+        "/v1/visitors/stats/month"
     );
 }
 
