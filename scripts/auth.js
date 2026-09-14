@@ -10,43 +10,57 @@ const STORAGE_KEYS = {
 /**
  * Login User
  */
-async function login(username, password) {
+async function login(email, password) {
+    try {
+        if (typeof API_BASE_URL !== "string" || !API_BASE_URL) {
+            throw new Error("API_BASE_URL is not defined. api.js may not have loaded.");
+        }
 
-    const response = await fetch(
-        `${API_BASE_URL}/v1/users/sign-in`,
-        {
+        const endpoint = `${API_BASE_URL}/v1/users/sign-in`;
+        console.info("Sending login request to:", endpoint);
+
+        const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             },
             body: JSON.stringify({
-                username,
+                email,
                 password
             })
+        });
+
+        const responseText = await response.text();
+        let responseData = {};
+
+        try {
+            responseData = responseText ? JSON.parse(responseText) : {};
+        } catch {
+            responseData = { message: responseText };
         }
-    );
 
-    if (!response.ok) {
+        if (!response.ok) {
+            throw {
+                status: response.status,
+                errorCode: responseData.errorCode,
+                message: responseData.message || `Login failed with status ${response.status}.`
+            };
+        }
 
-        const errorData =
-            await response.json();
+        saveAuthData(responseData);
+        routeUser(responseData.role);
+        return responseData;
+    } catch (error) {
+        if (error instanceof TypeError) {
+            console.error("The browser blocked or could not send the login request.", error);
+            throw new Error(
+                "The browser could not reach the login server. Check the browser console for CORS, DNS, or HTTPS errors."
+            );
+        }
 
-        throw {
-            status: response.status,
-            errorCode: errorData.errorCode,
-            message: errorData.message
-        };
+        throw error;
     }
-
-    const authData =
-        await response.json();
-
-    saveAuthData(authData);
-
-    routeUser(authData.role);
-
-    return authData;
 }
 
 /**
