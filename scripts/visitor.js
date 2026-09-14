@@ -119,6 +119,41 @@ if (visitorForm) {
         ? 'check-out'
         : 'check-in';
     const badgeResult = document.getElementById('badge-result');
+    const employeeSelect = document.getElementById('employee_id');
+
+    function getEmployeeCollection(response) {
+        if (Array.isArray(response)) return response;
+        return response?.content || response?.data || response?.items || [];
+    }
+
+    function getEmployeeName(employee) {
+        const firstName = employee.firstName ?? employee.firstname ?? employee.first_name ?? '';
+        const lastName = employee.lastName ?? employee.lastname ?? employee.last_name ?? '';
+        return employee.name || `${firstName} ${lastName}`.trim() || employee.email || 'Unnamed employee';
+    }
+
+    async function loadEmployeeOptions() {
+        try {
+            const employees = getEmployeeCollection(await getAllEmployees());
+            employeeSelect.replaceChildren(new Option('Select an employee', '', true, true));
+
+            employees.forEach((employee) => {
+                const employeeId = employee.id ?? employee.employeeId ?? employee.employee_id;
+                if (employeeId === undefined || employeeId === null) return;
+                employeeSelect.add(new Option(getEmployeeName(employee), employeeId));
+            });
+
+            if (employeeSelect.options.length === 1) {
+                employeeSelect.replaceChildren(new Option('No employees available', '', true, true));
+            }
+        } catch (error) {
+            employeeSelect.replaceChildren(new Option('Unable to load employees', '', true, true));
+            employeeSelect.disabled = true;
+            console.error('Unable to load employees:', error);
+        }
+    }
+
+    loadEmployeeOptions();
 
     function showBadge(visitor) {
         document.getElementById('badge-number').textContent = visitor.tagNumber || visitor.tag_number || 'Pending';
@@ -129,11 +164,20 @@ if (visitorForm) {
 
     visitorForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const visitor = Object.fromEntries(new FormData(visitorForm));
         const submitButton = visitorForm.querySelector('.submit-button');
 
         submitButton.disabled = true;
         try {
+            const visitor = {
+                firstName: document.getElementById('first_name').value.trim(),
+                lastName: document.getElementById('last_name').value.trim(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                phoneNumber: document.getElementById('phone_number').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                company: document.getElementById('company').value.trim(),
+                purpose: document.getElementById('purpose_of_visit').value.trim(),
+                hostId: employeeSelect.value
+            };
             const response = workflow === 'check-out'
                 ? await checkOutVisitor(visitor.tag_number)
                 : await checkInVisitor(visitor);
