@@ -147,7 +147,8 @@ if (visitorForm) {
                 employeeSelect.replaceChildren(new Option('No employees available', '', true, true));
             }
         } catch (error) {
-            employeeSelect.replaceChildren(new Option('Unable to load employees', '', true, true));
+            const message = error.message || 'Unable to load employees';
+            employeeSelect.replaceChildren(new Option(message, '', true, true));
             employeeSelect.disabled = true;
             console.error('Unable to load employees:', error);
         }
