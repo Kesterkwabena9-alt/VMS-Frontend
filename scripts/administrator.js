@@ -288,7 +288,7 @@ function setupUserManagement() {
     document.getElementById('users-body').addEventListener('click', async (event) => {
         const actionButton = event.target.closest('[data-action]');
         if (!actionButton) return;
-        const user = users.find((item) => item.id === actionButton.dataset.userId);
+        const user = users.find((item) => String(item.id) === actionButton.dataset.userId);
         if (!user) return;
         if (actionButton.dataset.action === 'edit') {
             editingUserId = user.id;
@@ -301,8 +301,12 @@ function setupUserManagement() {
             document.getElementById('user-name').focus();
         }
         if (actionButton.dataset.action === 'delete' && window.confirm(`Delete ${user.name}?`)) {
-            await deleteUser(user.id);
-            await loadUsers();
+            try {
+                await deleteUser(user.id);
+                await loadUsers();
+            } catch (error) {
+                alert(error.message || 'Unable to delete user.');
+            }
         }
     });
 }
