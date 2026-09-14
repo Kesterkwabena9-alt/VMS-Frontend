@@ -269,25 +269,41 @@ function renderUsers(searchTerm = '') {
 function resetUserForm() {
     editingUserId = null;
     document.getElementById('user-form').reset();
+    document.getElementById('user-password').required = true;
+    document.getElementById('user-password').placeholder = 'Enter password...';
     document.getElementById('user-submit-label').textContent = 'Add user';
     document.getElementById('cancel-user-edit').hidden = true;
 }
 
 function setupUserManagement() {
-    document.getElementById('user-form').addEventListener('submit', async (event) => {
+    const userForm = document.getElementById('user-form');
+    const userSubmit = userForm.querySelector('.user-submit');
+
+    userForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const firstName = document.getElementById('user-first-name').value.trim();
         const lastName = document.getElementById('user-last-name').value.trim();
         const email = document.getElementById('user-email').value.trim().toLowerCase();
+        const password = document.getElementById('user-password').value;
         const role = document.getElementById('user-role').value;
 
-        if (editingUserId !== null && editingUserId !== undefined) {
-            await updateUser(editingUserId, { firstName, lastName, email, role });
-        } else {
-            await createUser({ firstName, lastName, email, role });
+        userSubmit.disabled = true;
+        try {
+            if (editingUserId !== null && editingUserId !== undefined) {
+                const userData = { firstName, lastName, email, role };
+                if (password) userData.password = password;
+                await updateUser(editingUserId, userData);
+            } else {
+                await createUser({ firstName, lastName, email, password, role });
+            }
+            resetUserForm();
+            await loadUsers();
+        } catch (error) {
+            const details = error.details ? `\n${error.details}` : '';
+            alert(`${error.message || 'Unable to save user.'}${details}`);
+        } finally {
+            userSubmit.disabled = false;
         }
-        resetUserForm();
-        await loadUsers();
     });
 
     document.getElementById('user-search').addEventListener('input', (event) => renderUsers(event.target.value));
@@ -302,6 +318,10 @@ function setupUserManagement() {
             document.getElementById('user-first-name').value = user.firstName;
             document.getElementById('user-last-name').value = user.lastName;
             document.getElementById('user-email').value = user.email;
+            const passwordInput = document.getElementById('user-password');
+            passwordInput.value = '';
+            passwordInput.required = false;
+            passwordInput.placeholder = 'Leave blank to keep current password';
             document.getElementById('user-role').value = user.role;
             document.getElementById('user-submit-label').textContent = 'Save changes';
             document.getElementById('cancel-user-edit').hidden = false;

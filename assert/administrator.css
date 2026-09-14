@@ -668,6 +668,10 @@ td {
     margin-bottom: 24px;
 }
 
+.user-management:not(.employee-management) .user-form {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+}
+
 .user-form-field {
     display: grid;
     gap: 7px;
