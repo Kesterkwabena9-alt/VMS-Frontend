@@ -88,7 +88,7 @@ async function getTotalVisitorsToday() {
 async function getCheckedInVisitorsToday() {
 
     return await apiRequest(
-        "/v1/visitors/stats/today"
+        "/v1/visitors/stats/checked-in-today"
     );
 }
 

@@ -176,8 +176,8 @@ function normalizeVisitor(visitor, employees = [], users = []) {
 async function loadDashboardData() {
     const loadSequence = ++dashboardLoadSequence;
     const results = await Promise.allSettled([
-        getUncheckedVisitorsTotal(),
         getTotalVisitorsToday(),
+        getCheckedInVisitorsToday(),
         getTotalVisitorsThisWeek(),
         getTotalVisitorsThisMonth(),
         getAllVisitors(),
@@ -191,7 +191,7 @@ async function loadDashboardData() {
     const userRecords = getCollection(value(6)).map(normalizeUser);
     const visitorHistory = getCollection(value(4)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
-    dashboardData.visitorsToday = getVisitorsCheckedInAndOutToday(visitorHistory);
+    dashboardData.visitorsToday = getCount(value(0));
     dashboardData.visitorsThisWeek = getCount(value(2));
     dashboardData.visitorsThisMonth = getCount(value(3));
     dashboardData.totalVisitors = visitorHistory.length;
@@ -199,7 +199,7 @@ async function loadDashboardData() {
     dashboardData.currentVisitors = Array.from(
         new Map(visitorHistory.filter(isCurrentVisitor).map((visitor) => [getVisitorKey(visitor), visitor])).values()
     );
-    const checkedInCount = Number(value(0));
+    const checkedInCount = getCount(value(1));
     dashboardData.visitorsCheckedIn = Number.isFinite(checkedInCount)
         ? checkedInCount
         : dashboardData.currentVisitors.length;
