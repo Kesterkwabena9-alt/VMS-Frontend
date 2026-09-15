@@ -62,7 +62,19 @@ function getCollection(response) {
 function getCount(response) {
     if (typeof response === 'number') return response;
     if (Array.isArray(response)) return response.length;
-    return Number(response?.count ?? response?.total ?? response?.value ?? 0);
+    if (!response || typeof response !== 'object') return 0;
+
+    const directCount = response.count ?? response.total ?? response.value;
+    if (directCount !== undefined && directCount !== null) return Number(directCount);
+
+    for (const key of ['data', 'result', 'stats']) {
+        if (response[key] && response[key] !== response) {
+            const nestedCount = getCount(response[key]);
+            if (nestedCount > 0) return nestedCount;
+        }
+    }
+
+    return 0;
 }
 
 function isCurrentVisitor(visitor) {
@@ -141,31 +153,28 @@ function normalizeVisitor(visitor, employees = [], users = []) {
 
 async function loadDashboardData() {
     const results = await Promise.allSettled([
-        getCheckedInVisitorsToday(),
+        getUncheckedVisitors(),
         getTotalVisitorsToday(),
         getTotalVisitorsThisWeek(),
         getTotalVisitorsThisMonth(),
         getAllVisitors(),
-        getUncheckedVisitors(),
         getAllEmployees(),
         getAllUsers()
     ]);
     const value = (index) => results[index].status === 'fulfilled' ? results[index].value : 0;
-    const employeeRecords = getCollection(value(6)).map(normalizeEmployee);
-    const userRecords = getCollection(value(7)).map(normalizeUser);
+    const employeeRecords = getCollection(value(5)).map(normalizeEmployee);
+    const userRecords = getCollection(value(6)).map(normalizeUser);
     const visitorHistory = getCollection(value(4)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
-    dashboardData.visitorsCheckedIn = getCount(value(0));
     dashboardData.visitorsToday = getCount(value(1));
     dashboardData.visitorsThisWeek = getCount(value(2));
     dashboardData.visitorsThisMonth = getCount(value(3));
-    dashboardData.totalVisitors = visitorHistory.length || getCount(value(4));
-    dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
-    const uncheckedVisitors = getCollection(value(5))
+    dashboardData.totalVisitors = getCount(value(4)) || visitorHistory.length;
+    dashboardData.totalEmployees = employeeRecords.length || getCount(value(5));
+    const uncheckedVisitors = getCollection(value(0))
         .map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
-    const currentVisitors = [...uncheckedVisitors, ...visitorHistory.filter(isCurrentVisitor)];
     dashboardData.currentVisitors = Array.from(
-        new Map(currentVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
+        new Map(uncheckedVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
     );
     dashboardData.visitorsCheckedIn = dashboardData.currentVisitors.length;
     dashboardData.visitorHistory = visitorHistory;
