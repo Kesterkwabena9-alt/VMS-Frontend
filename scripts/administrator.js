@@ -26,6 +26,9 @@ let employees = [];
 let editingEmployeeId = null;
 let dashboardLoadSequence = 0;
 let currentVisitorsPage = 1;
+let visitorHistoryPage = 1;
+let usersPage = 1;
+let employeesPage = 1;
 const defaultSettings = {
     organizationName: 'UTS Developers',
     adminContactEmail: 'admin@utsdevelopers.com',
@@ -89,6 +92,21 @@ function isCurrentVisitor(visitor) {
 
 function getVisitorKey(visitor) {
     return String(visitor.id ?? visitor.visitorId ?? visitor.tag ?? visitor.tagNumber ?? `${visitor.firstName}-${visitor.lastName}-${visitor.email}`);
+}
+
+function isToday(value) {
+    if (!value) return false;
+    const date = new Date(value);
+    const today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate();
+}
+
+function getVisitorsCheckedInAndOutToday(visitors) {
+    return visitors.filter((visitor) =>
+        isToday(visitor.checkedInTime) && isToday(visitor.checkOutTime)
+    ).length;
 }
 
 function getReferenceId(reference) {
@@ -172,7 +190,7 @@ async function loadDashboardData() {
     const userRecords = getCollection(value(7)).map(normalizeUser);
     const visitorHistory = getCollection(value(5)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
-    dashboardData.visitorsToday = getCount(value(2));
+    dashboardData.visitorsToday = getVisitorsCheckedInAndOutToday(visitorHistory);
     dashboardData.visitorsThisWeek = getCount(value(3));
     dashboardData.visitorsThisMonth = getCount(value(4));
     dashboardData.totalVisitors = getCount(value(5)) || visitorHistory.length;
@@ -191,6 +209,9 @@ async function loadDashboardData() {
         Math.max(1, Math.ceil(dashboardData.currentVisitors.length / 10))
     );
     dashboardData.visitorHistory = visitorHistory;
+    visitorHistoryPage = Math.min(visitorHistoryPage, Math.max(1, Math.ceil(visitorHistory.length / 10)));
+    usersPage = Math.min(usersPage, Math.max(1, Math.ceil(users.length / 10)));
+    employeesPage = Math.min(employeesPage, Math.max(1, Math.ceil(employees.length / 10)));
     renderDashboard();
 }
 
@@ -298,6 +319,7 @@ async function loadUsers() {
     const response = await getAllUsers();
     const userCollection = Array.isArray(response) ? response : response?.content || response?.data || [];
     users = userCollection.map(normalizeUser);
+    usersPage = Math.min(usersPage, Math.max(1, Math.ceil(users.length / 10)));
     renderUsers(document.getElementById('user-search').value);
     renderSummary();
 }
@@ -344,6 +366,7 @@ function normalizeEmployee(employee) {
 async function loadEmployees() {
     const response = await getAllEmployees();
     employees = getCollection(response).map(normalizeEmployee);
+    employeesPage = Math.min(employeesPage, Math.max(1, Math.ceil(employees.length / 10)));
     renderEmployees(document.getElementById('employee-search').value);
     renderSummary();
 }
@@ -359,8 +382,13 @@ function renderUsers(searchTerm = '') {
     const usersEmpty = document.getElementById('users-empty');
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const visibleUsers = users.filter((user) => `${user.name} ${user.email}`.toLowerCase().includes(normalizedSearch));
+    const pageSize = 10;
+    const totalPages = Math.max(1, Math.ceil(visibleUsers.length / pageSize));
+    usersPage = Math.min(usersPage, totalPages);
+    const pageStart = (usersPage - 1) * pageSize;
+    const pagedUsers = visibleUsers.slice(pageStart, pageStart + pageSize);
 
-    usersBody.innerHTML = visibleUsers.map((user) => `
+    usersBody.innerHTML = pagedUsers.map((user) => `
         <tr>
             <td><strong>${escapeHtml(user.name)}</strong></td>
             <td>${escapeHtml(user.email)}</td>
@@ -375,6 +403,9 @@ function renderUsers(searchTerm = '') {
 
     usersEmpty.hidden = visibleUsers.length > 0;
     document.getElementById('user-count').textContent = `${users.length} user${users.length === 1 ? '' : 's'}`;
+    document.getElementById('users-page').textContent = `Page ${usersPage} of ${totalPages}`;
+    document.getElementById('users-previous').disabled = usersPage === 1;
+    document.getElementById('users-next').disabled = usersPage === totalPages;
 }
 
 function resetUserForm() {
@@ -439,7 +470,10 @@ function setupUserManagement() {
         }
     });
 
-    document.getElementById('user-search').addEventListener('input', (event) => renderUsers(event.target.value));
+    document.getElementById('user-search').addEventListener('input', (event) => {
+        usersPage = 1;
+        renderUsers(event.target.value);
+    });
     document.getElementById('cancel-user-edit').addEventListener('click', resetUserForm);
     document.getElementById('users-body').addEventListener('click', async (event) => {
         const actionButton = event.target.closest('[data-action]');
@@ -481,8 +515,13 @@ function renderEmployees(searchTerm = '') {
     const visibleEmployees = employees.filter((employee) =>
         `${employee.name} ${employee.email} ${employee.department}`.toLowerCase().includes(normalizedSearch)
     );
+    const pageSize = 10;
+    const totalPages = Math.max(1, Math.ceil(visibleEmployees.length / pageSize));
+    employeesPage = Math.min(employeesPage, totalPages);
+    const pageStart = (employeesPage - 1) * pageSize;
+    const pagedEmployees = visibleEmployees.slice(pageStart, pageStart + pageSize);
 
-    employeesBody.innerHTML = visibleEmployees.map((employee) => `
+    employeesBody.innerHTML = pagedEmployees.map((employee) => `
         <tr>
             <td><strong>${escapeHtml(employee.name || '-')}</strong></td>
             <td>${escapeHtml(employee.email)}</td>
@@ -497,6 +536,9 @@ function renderEmployees(searchTerm = '') {
 
     employeesEmpty.hidden = visibleEmployees.length > 0;
     document.getElementById('employee-count').textContent = `${employees.length} employee${employees.length === 1 ? '' : 's'}`;
+    document.getElementById('employees-page').textContent = `Page ${employeesPage} of ${totalPages}`;
+    document.getElementById('employees-previous').disabled = employeesPage === 1;
+    document.getElementById('employees-next').disabled = employeesPage === totalPages;
 }
 
 function resetEmployeeForm() {
@@ -539,7 +581,10 @@ function setupEmployeeManagement() {
         }
     });
 
-    document.getElementById('employee-search').addEventListener('input', (event) => renderEmployees(event.target.value));
+    document.getElementById('employee-search').addEventListener('input', (event) => {
+        employeesPage = 1;
+        renderEmployees(event.target.value);
+    });
     document.getElementById('cancel-employee-edit').addEventListener('click', resetEmployeeForm);
     document.getElementById('employees-body').addEventListener('click', async (event) => {
         const actionButton = event.target.closest('[data-employee-action]');
@@ -604,8 +649,13 @@ function renderVisitorHistory() {
     const historyBody = document.getElementById('history-body');
     const historyEmpty = document.getElementById('history-empty');
     const visitorHistory = getVisitorHistory();
+    const pageSize = 10;
+    const totalPages = Math.max(1, Math.ceil(visitorHistory.length / pageSize));
+    visitorHistoryPage = Math.min(visitorHistoryPage, totalPages);
+    const pageStart = (visitorHistoryPage - 1) * pageSize;
+    const pagedVisitorHistory = visitorHistory.slice(pageStart, pageStart + pageSize);
 
-    historyBody.innerHTML = visitorHistory.map((visitor) => `
+    historyBody.innerHTML = pagedVisitorHistory.map((visitor) => `
         <tr>
             <td>
                 <span class="visitor-name">${escapeHtml(`${visitor.first_name} ${visitor.last_name}`)}</span>
@@ -626,6 +676,9 @@ function renderVisitorHistory() {
 
     historyEmpty.hidden = visitorHistory.length > 0;
     document.getElementById('history-count').textContent = `${visitorHistory.length} visit${visitorHistory.length === 1 ? '' : 's'}`;
+    document.getElementById('history-page').textContent = `Page ${visitorHistoryPage} of ${totalPages}`;
+    document.getElementById('history-previous').disabled = visitorHistoryPage === 1;
+    document.getElementById('history-next').disabled = visitorHistoryPage === totalPages;
 }
 
 function renderPurposeInsights() {
@@ -684,6 +737,45 @@ document.getElementById('current-visitors-next').addEventListener('click', () =>
     if (currentVisitorsPage < totalPages) {
         currentVisitorsPage += 1;
         renderCurrentVisitors();
+    }
+});
+document.getElementById('history-previous').addEventListener('click', () => {
+    if (visitorHistoryPage > 1) {
+        visitorHistoryPage -= 1;
+        renderVisitorHistory();
+    }
+});
+document.getElementById('history-next').addEventListener('click', () => {
+    const totalPages = Math.max(1, Math.ceil(dashboardData.visitorHistory.length / 10));
+    if (visitorHistoryPage < totalPages) {
+        visitorHistoryPage += 1;
+        renderVisitorHistory();
+    }
+});
+document.getElementById('users-previous').addEventListener('click', () => {
+    if (usersPage > 1) {
+        usersPage -= 1;
+        renderUsers(document.getElementById('user-search').value);
+    }
+});
+document.getElementById('users-next').addEventListener('click', () => {
+    const filteredUsers = users.filter((user) => `${user.name} ${user.email}`.toLowerCase().includes(document.getElementById('user-search').value.trim().toLowerCase()));
+    if (usersPage < Math.max(1, Math.ceil(filteredUsers.length / 10))) {
+        usersPage += 1;
+        renderUsers(document.getElementById('user-search').value);
+    }
+});
+document.getElementById('employees-previous').addEventListener('click', () => {
+    if (employeesPage > 1) {
+        employeesPage -= 1;
+        renderEmployees(document.getElementById('employee-search').value);
+    }
+});
+document.getElementById('employees-next').addEventListener('click', () => {
+    const filteredEmployees = employees.filter((employee) => `${employee.name} ${employee.email} ${employee.department}`.toLowerCase().includes(document.getElementById('employee-search').value.trim().toLowerCase()));
+    if (employeesPage < Math.max(1, Math.ceil(filteredEmployees.length / 10))) {
+        employeesPage += 1;
+        renderEmployees(document.getElementById('employee-search').value);
     }
 });
 setupNavigation();

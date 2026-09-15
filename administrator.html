@@ -134,6 +134,11 @@
                 </table>
             </div>
             <p class="empty-message" id="history-empty" hidden>No visitor history is available.</p>
+            <div class="table-pagination" aria-label="Visitor history pagination">
+                <button class="refresh-button" id="history-previous" type="button">Previous</button>
+                <span id="history-page" aria-live="polite">Page 1 of 1</span>
+                <button class="refresh-button" id="history-next" type="button">Next</button>
+            </div>
         </section>
         <section class="panel system-settings" id="system-settings" data-view-panel="settings" aria-labelledby="settings-title" hidden>
             <div class="panel-heading">
@@ -254,6 +259,11 @@
                 </table>
             </div>
             <p class="empty-message" id="users-empty" hidden>No users match your search.</p>
+            <div class="table-pagination" aria-label="Users pagination">
+                <button class="refresh-button" id="users-previous" type="button">Previous</button>
+                <span id="users-page" aria-live="polite">Page 1 of 1</span>
+                <button class="refresh-button" id="users-next" type="button">Next</button>
+            </div>
         </section>
         <section class="panel user-management employee-management" id="manage-employees" data-view-panel="employees" aria-labelledby="employees-title" hidden>
             <div class="panel-heading">
@@ -298,6 +308,11 @@
                 </table>
             </div>
             <p class="empty-message" id="employees-empty" hidden>No employees match your search.</p>
+            <div class="table-pagination" aria-label="Employees pagination">
+                <button class="refresh-button" id="employees-previous" type="button">Previous</button>
+                <span id="employees-page" aria-live="polite">Page 1 of 1</span>
+                <button class="refresh-button" id="employees-next" type="button">Next</button>
+            </div>
         </section>
     </main>
     <script src="scripts/theme.js"></script>
@@ -306,7 +321,7 @@
     <script src="scripts/visitor.js?v=20260915-p4"></script>
     <script src="scripts/employees.js?v=20260915-p1"></script>
     <script src="scripts/users.js?v=20260915-p1"></script>
-    <script src="scripts/administrator.js?v=20260915-p4"></script>
+    <script src="scripts/administrator.js?v=20260915-p5"></script>
     <script src="scripts/auth-guard.js"></script> 
 </body>
 </html>
