@@ -23,7 +23,13 @@ function getVisitorCollection(response) {
 }
 
 function getVisitorTag(visitor) {
-    return visitor?.tag ?? visitor?.tagNumber ?? visitor?.tag_number;
+    return visitor?.tag ?? visitor?.tagNumber ?? visitor?.tag_number ??
+        visitor?.tagId ?? visitor?.tag_id ?? visitor?.badgeNumber ?? visitor?.badge;
+}
+
+function normalizeTag(tag) {
+    const value = String(tag ?? '').trim();
+    return /^\d+$/.test(value) ? String(Number(value)) : value.toLowerCase();
 }
 
 function getCheckOutTime(visitor) {
@@ -43,9 +49,12 @@ async function findActiveVisitor(tag) {
         : []);
     return visitors.find((visitor) => {
         const checkoutTime = getCheckOutTime(visitor);
-        const status = String(visitor.status || visitor.visitStatus || '').toLowerCase();
-        return String(getVisitorTag(visitor)).trim() === String(tag).trim() &&
-            !checkoutTime && !['checked out', 'checked_out', 'checkout', 'completed'].includes(status);
+        const status = String(visitor.status || visitor.visitStatus || '')
+            .toLowerCase()
+            .replace(/[-\s]/g, '_');
+        const checkedOut = visitor.checkedOut === true || visitor.checked_out === true;
+        return normalizeTag(getVisitorTag(visitor)) === normalizeTag(tag) &&
+            !checkoutTime && !checkedOut && !['checked_out', 'checkout', 'completed'].includes(status);
     });
 }
 
@@ -62,7 +71,8 @@ searchForm.addEventListener('submit', async (event) => {
     checkoutMessage.textContent = 'Checking out visitor...';
     try {
         const activeVisitor = await findActiveVisitor(tag);
-        const response = await checkOutVisitor(tag);
+        const checkoutTag = activeVisitor ? getVisitorTag(activeVisitor) : tag;
+        const response = await checkOutVisitor(checkoutTag);
         const checkoutRecord = response && typeof response === 'object'
             ? (response.data && typeof response.data === 'object' ? response.data : response)
             : {};

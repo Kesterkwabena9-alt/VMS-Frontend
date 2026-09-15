@@ -205,7 +205,7 @@ function getPageTotal(response) {
 
 async function getAllPages(endpoint, pageSize = 10) {
     const records = [];
-    let page = 1;
+    let page = 0;
 
     while (true) {
         const response = await apiRequest(`${endpoint}?page=${page}&size=${pageSize}`);

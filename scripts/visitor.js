@@ -43,7 +43,7 @@ async function getUncheckedVisitors() {
 }
 
 async function getUncheckedVisitorsTotal() {
-    const response = await apiRequest("/v1/visitors/unchecked?page=1&size=1");
+    const response = await apiRequest("/v1/visitors/unchecked?page=0&size=1");
     return getPageTotal(response);
 }
 
@@ -222,6 +222,9 @@ if (visitorForm) {
                 purpose: document.getElementById('purpose_of_visit').value.trim(),
                 hostId: employeeSelect.value
             };
+            if (workflow === 'check-out' && !visitor.tag_number) {
+                throw new Error('Enter the visitor tag number before checking out.');
+            }
             const response = workflow === 'check-out'
                 ? await checkOutVisitor(visitor.tag_number)
                 : await checkInVisitor(visitor);

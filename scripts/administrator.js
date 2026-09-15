@@ -52,7 +52,7 @@ function getCollection(response) {
     if (Array.isArray(response)) return response;
     if (!response || typeof response !== 'object') return [];
 
-    for (const key of ['content', 'items', 'results', 'visitors', 'data']) {
+    for (const key of ['content', 'items', 'results', 'visitors', 'users', 'employees', 'data']) {
         const nested = response[key];
         if (Array.isArray(nested)) return nested;
         if (nested && typeof nested === 'object' && nested !== response) {
@@ -84,9 +84,11 @@ function getCount(response) {
 
 function isCurrentVisitor(visitor) {
     const status = String(visitor.status || visitor.visitStatus || '').toLowerCase().replace(/[-\s]/g, '_');
-    const checkedOut = visitor.checkedOut === true || visitor.checked_out === true;
-    return !checkedOut && !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.checkOutAt &&
-        !visitor.checked_out_time && !visitor.check_out_time && !visitor.check_out_at && !visitor.checked_out_at &&
+    const checkedOut = visitor.checkedOut === true || visitor.checked_out === true ||
+        visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime ||
+        visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_time ||
+        visitor.check_out_time || visitor.check_out_at || visitor.checked_out_at;
+    return !checkedOut &&
         !['checked_out', 'checkout', 'completed'].includes(status);
 }
 
@@ -139,11 +141,9 @@ function normalizeVisitor(visitor, employees = [], users = []) {
     const hostReference = visitor.host ?? visitor.hostId ?? visitor.employee ?? visitor.employeeId;
     const checkedInByReference = visitor.checkedInByUser ?? visitor.checkedInBy ?? visitor.userId ?? visitor.checkedInById;
 
-    const visitorTag = visitor.tag ?? visitor.tagNumber ?? visitor.tag_number;
-    const storedCheckoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
-    const storedCheckoutTime = visitorTag === undefined || visitorTag === null
-        ? undefined
-        : storedCheckoutTimes[String(visitorTag)];
+    const checkOutTime = visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime ||
+        visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_at ||
+        visitor.check_out_time || visitor.checked_out_time;
 
     return {
         ...visitor,
@@ -158,23 +158,24 @@ function normalizeVisitor(visitor, employees = [], users = []) {
         purpose: visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '',
         hostId: getReferenceId(hostReference),
         userId: getReferenceId(checkedInByReference),
-        tag: visitor.tag ?? visitor.tagNumber ?? visitor.tag_number ?? '-',
+        tag: visitor.tag ?? visitor.tagNumber ?? visitor.tag_number ?? visitor.tagId ?? visitor.tag_id ??
+            visitor.badgeNumber ?? visitor.badge ?? '-',
         person_to_see: visitor.person_to_see || visitor.personToSee || visitor.personVisited ||
             findReferenceName(hostReference, employees, '-'),
         checked_in_by: visitor.checked_in_by || visitor.checkedInByName ||
             findReferenceName(checkedInByReference, users, 'Visitor self-service'),
         checkedInTime: visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_at || visitor.checked_in_time,
-        checkOutTime: visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_at || visitor.check_out_time || visitor.checked_out_time || storedCheckoutTime,
+        checkOutTime,
         checked_in_at: visitor.checked_in_at || visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_time,
-        checked_out_at: visitor.checked_out_at || visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.check_out_time || visitor.checked_out_time || storedCheckoutTime,
-        status: visitor.status || visitor.visitStatus || (visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checked_out_at || storedCheckoutTime ? 'Checked out' : 'Checked in')
+        checked_out_at: visitor.checked_out_at || checkOutTime,
+        status: visitor.status || visitor.visitStatus ||
+            (visitor.checkedOut === true || visitor.checked_out === true || checkOutTime ? 'Checked out' : 'Checked in')
     };
 }
 
 async function loadDashboardData() {
     const loadSequence = ++dashboardLoadSequence;
     const results = await Promise.allSettled([
-        getUncheckedVisitors(),
         getUncheckedVisitorsTotal(),
         getTotalVisitorsToday(),
         getTotalVisitorsThisWeek(),
@@ -186,23 +187,21 @@ async function loadDashboardData() {
     if (loadSequence !== dashboardLoadSequence) return;
 
     const value = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
-    const employeeRecords = getCollection(value(6)).map(normalizeEmployee);
-    const userRecords = getCollection(value(7)).map(normalizeUser);
-    const visitorHistory = getCollection(value(5)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    const employeeRecords = getCollection(value(5)).map(normalizeEmployee);
+    const userRecords = getCollection(value(6)).map(normalizeUser);
+    const visitorHistory = getCollection(value(4)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
     dashboardData.visitorsToday = getVisitorsCheckedInAndOutToday(visitorHistory);
-    dashboardData.visitorsThisWeek = getCount(value(3));
-    dashboardData.visitorsThisMonth = getCount(value(4));
-    dashboardData.totalVisitors = getCount(value(5)) || visitorHistory.length;
-    dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
-    const uncheckedVisitors = getCollection(value(0))
-        .map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    dashboardData.visitorsThisWeek = getCount(value(2));
+    dashboardData.visitorsThisMonth = getCount(value(3));
+    dashboardData.totalVisitors = visitorHistory.length;
+    dashboardData.totalEmployees = employeeRecords.length || getCount(value(5));
     dashboardData.currentVisitors = Array.from(
-        new Map(uncheckedVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
+        new Map(visitorHistory.filter(isCurrentVisitor).map((visitor) => [getVisitorKey(visitor), visitor])).values()
     );
-    const apiCheckedInTotal = value(1);
-    dashboardData.visitorsCheckedIn = Number.isFinite(apiCheckedInTotal) && apiCheckedInTotal !== null
-        ? apiCheckedInTotal
+    const checkedInCount = Number(value(0));
+    dashboardData.visitorsCheckedIn = Number.isFinite(checkedInCount)
+        ? checkedInCount
         : dashboardData.currentVisitors.length;
     currentVisitorsPage = Math.min(
         currentVisitorsPage,
@@ -317,7 +316,7 @@ function renderSummary() {
 
 async function loadUsers() {
     const response = await getAllUsers();
-    const userCollection = Array.isArray(response) ? response : response?.content || response?.data || [];
+    const userCollection = getCollection(response);
     users = userCollection.map(normalizeUser);
     usersPage = Math.min(usersPage, Math.max(1, Math.ceil(users.length / 10)));
     renderUsers(document.getElementById('user-search').value);
@@ -339,7 +338,7 @@ function normalizeUser(user) {
         lastName: lastName || nameParts.join(' '),
         name: fullName,
         email: user.email || user.emailAddress || '',
-        role: user.role || user.userRole || '-',
+        role: user.role || user.userRole || user.user_role || user.roles?.[0]?.name || user.roles?.[0] || '-',
         status: rawStatus || (typeof isActive === 'boolean' ? (isActive ? 'Active' : 'Inactive') : 'Active')
     };
 }
