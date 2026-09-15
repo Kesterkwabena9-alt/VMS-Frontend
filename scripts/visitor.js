@@ -172,6 +172,39 @@ if (visitorForm) {
         badgeResult.hidden = false;
     }
 
+    document.getElementById('print-badge').addEventListener('click', () => {
+        window.print();
+    });
+
+    document.getElementById('download-badge').addEventListener('click', () => {
+        const badgeCard = document.getElementById('badge-card').outerHTML;
+        const badgeNumber = document.getElementById('badge-number').textContent.trim() || 'visitor';
+        const filename = `visitor-badge-${badgeNumber.replace(/[^a-z0-9-_]/gi, '-')}.html`;
+        const badgeDocument = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Badge</title>
+    <style>
+        body { margin: 40px; font-family: Arial, sans-serif; color: #132238; }
+        .badge-card { display: grid; gap: 8px; width: min(100%, 420px); padding: 24px; border: 2px dashed #3fa9f5; border-radius: 12px; text-align: center; }
+        .badge-label { color: #64748b; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+        .badge-number { color: #123b63; font-size: 2.5rem; letter-spacing: 0.08em; }
+        .badge-visitor { font-size: 1.1rem; font-weight: 700; }
+        .badge-workflow { color: #1d5c9e; font-size: 0.9rem; }
+    </style>
+</head>
+<body>${badgeCard}</body>
+</html>`;
+        const blob = new Blob([badgeDocument], { type: 'text/html' });
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = filename;
+        downloadLink.click();
+        URL.revokeObjectURL(downloadLink.href);
+    });
+
     visitorForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const submitButton = visitorForm.querySelector('.submit-button');
