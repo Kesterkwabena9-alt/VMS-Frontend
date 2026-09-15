@@ -44,8 +44,11 @@ function formatCheckInTime(value) {
 }
 
 async function findActiveVisitor(tag) {
-    const response = await getUncheckedVisitors();
-    return getVisitorCollection(response).find((visitor) => String(getVisitorTag(visitor)) === String(tag));
+    const responses = await Promise.allSettled([getUncheckedVisitors(), getAllVisitors()]);
+    const visitors = responses.flatMap((result) => result.status === 'fulfilled'
+        ? getVisitorCollection(result.value)
+        : []);
+    return visitors.find((visitor) => String(getVisitorTag(visitor)).trim() === String(tag).trim());
 }
 
 async function resolveHost(visitor) {
