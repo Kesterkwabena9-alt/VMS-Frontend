@@ -15,7 +15,10 @@ function updateDateTime() {
 
 function getVisitorCollection(response) {
     if (Array.isArray(response)) return response;
-    return response?.content || response?.data || response?.items || [];
+    if (Array.isArray(response?.content)) return response.content;
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.items)) return response.items;
+    return response && typeof response === 'object' ? [response] : [];
 }
 
 function getVisitorTag(visitor) {
@@ -72,8 +75,13 @@ async function resolveHost(visitor) {
     try {
         return await getEmployeeById(hostId);
     } catch (error) {
-        console.warn('Unable to load visitor host details:', error);
-        return null;
+        try {
+            const employees = getVisitorCollection(await getAllEmployees());
+            return employees.find((employee) => String(employee.id ?? employee.employeeId ?? employee.employee_id) === String(hostId)) || null;
+        } catch (employeeError) {
+            console.warn('Unable to load visitor host details:', employeeError);
+            return null;
+        }
     }
 }
 
@@ -109,7 +117,6 @@ searchForm.addEventListener('submit', async (event) => {
         document.getElementById('department').textContent = department;
         document.getElementById('purpose').textContent = purpose;
         document.getElementById('check-in-time').textContent = formatCheckInTime(getCheckInTime(visitor));
-        document.getElementById('visit-duration').textContent = '-';
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
         const checkoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
         checkoutTimes[tag] = checkoutTime;
