@@ -27,7 +27,8 @@ async function apiRequest(
     const token = localStorage.getItem("token");
 
     const headers = {
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Cache-Control": "no-cache"
     };
 
     // Add JWT only if available
@@ -54,10 +55,13 @@ async function apiRequest(
 
     try {
 
-        const response = await fetch(
-            `${API_BASE_URL}${endpoint}`,
-            config
-        );
+        const requestUrl = new URL(`${API_BASE_URL}${endpoint}`);
+        if (method === "GET") {
+            requestUrl.searchParams.set("_vms", Date.now().toString());
+            config.cache = "no-store";
+        }
+
+        const response = await fetch(requestUrl, config);
 
         /*
          * Authentication / Authorization

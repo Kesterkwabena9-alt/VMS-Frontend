@@ -24,6 +24,7 @@ let users = [];
 let editingUserId = null;
 let employees = [];
 let editingEmployeeId = null;
+let dashboardLoadSequence = 0;
 const defaultSettings = {
     organizationName: 'UTS Developers',
     adminContactEmail: 'admin@utsdevelopers.com',
@@ -152,6 +153,7 @@ function normalizeVisitor(visitor, employees = [], users = []) {
 }
 
 async function loadDashboardData() {
+    const loadSequence = ++dashboardLoadSequence;
     const results = await Promise.allSettled([
         getUncheckedVisitors(),
         getTotalVisitorsToday(),
@@ -161,6 +163,8 @@ async function loadDashboardData() {
         getAllEmployees(),
         getAllUsers()
     ]);
+    if (loadSequence !== dashboardLoadSequence) return;
+
     const value = (index) => results[index].status === 'fulfilled' ? results[index].value : 0;
     const employeeRecords = getCollection(value(5)).map(normalizeEmployee);
     const userRecords = getCollection(value(6)).map(normalizeUser);
