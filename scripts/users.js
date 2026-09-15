@@ -43,6 +43,9 @@ async function updateUser(
     if (updatePayload.password === null || updatePayload.password === undefined || updatePayload.password === '') {
         delete updatePayload.password;
     }
+    if (Object.prototype.hasOwnProperty.call(updatePayload, 'password') && typeof updatePayload.password !== 'string') {
+        delete updatePayload.password;
+    }
 
     return await apiRequest(
         `/v1/users/update/${encodeURIComponent(userId)}`,

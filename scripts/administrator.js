@@ -339,6 +339,7 @@ function renderUsers(searchTerm = '') {
 function resetUserForm() {
     editingUserId = null;
     document.getElementById('user-form').reset();
+    document.getElementById('user-email').readOnly = false;
     document.getElementById('user-password').required = true;
     document.getElementById('user-password').placeholder = 'Enter password...';
     document.getElementById('user-submit-label').textContent = 'Add user';
@@ -377,6 +378,9 @@ function setupUserManagement() {
             if (editingUserId !== null && editingUserId !== undefined) {
                 const userData = { firstname: firstName, lastname: lastName, email, role };
                 if (password) userData.password = password;
+                if (!password && Object.prototype.hasOwnProperty.call(userData, 'password')) {
+                    delete userData.password;
+                }
                 await updateUser(editingUserId, userData);
             } else {
                 await createUser({ firstname: firstName, lastname: lastName, email, password, role });
@@ -402,7 +406,9 @@ function setupUserManagement() {
             editingUserId = user.id;
             document.getElementById('user-first-name').value = user.firstName;
             document.getElementById('user-last-name').value = user.lastName;
-            document.getElementById('user-email').value = user.email;
+            const emailInput = document.getElementById('user-email');
+            emailInput.value = user.email;
+            emailInput.readOnly = true;
             const passwordInput = document.getElementById('user-password');
             passwordInput.value = '';
             passwordInput.required = false;
