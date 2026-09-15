@@ -38,13 +38,16 @@ async function getAllUsers() {
 async function updateUser(
     userId,
     userData
-    
 ) {
+    const updatePayload = { ...userData };
+    if (updatePayload.password === null || updatePayload.password === undefined || updatePayload.password === '') {
+        delete updatePayload.password;
+    }
 
     return await apiRequest(
         `/v1/users/update/${encodeURIComponent(userId)}`,
         "PUT",
-        userData
+        updatePayload
     );
 }
 
