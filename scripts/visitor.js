@@ -42,6 +42,11 @@ async function getUncheckedVisitors() {
     return await getAllPages("/v1/visitors/unchecked");
 }
 
+async function getUncheckedVisitorsTotal() {
+    const response = await apiRequest("/v1/visitors/unchecked?page=1&size=1");
+    return getPageTotal(response);
+}
+
 /**
  * Search Visitors
  */

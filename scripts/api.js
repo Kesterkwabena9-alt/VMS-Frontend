@@ -193,9 +193,19 @@ function getPageMetadata(response) {
     return response;
 }
 
+function getPageTotal(response) {
+    const metadata = getPageMetadata(response);
+    const total = metadata.totalElements ?? metadata.total_elements ?? metadata.total ?? metadata.count;
+    if (total !== undefined && total !== null && Number.isFinite(Number(total))) {
+        return Number(total);
+    }
+
+    return null;
+}
+
 async function getAllPages(endpoint, pageSize = 10) {
     const records = [];
-    let page = 0;
+    let page = 1;
 
     while (true) {
         const response = await apiRequest(`${endpoint}?page=${page}&size=${pageSize}`);
@@ -210,7 +220,7 @@ async function getAllPages(endpoint, pageSize = 10) {
         records.push(...pageRecords);
 
         if (isLastPage || hasNextPage === false) break;
-        if (Number.isFinite(totalPages) && currentPage + 1 >= totalPages) break;
+        if (Number.isFinite(totalPages) && currentPage >= totalPages) break;
         if (Number.isFinite(totalElements) && records.length >= totalElements) break;
         if (pageRecords.length < pageSize) break;
 

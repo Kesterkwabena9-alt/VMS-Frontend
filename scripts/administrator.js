@@ -25,6 +25,7 @@ let editingUserId = null;
 let employees = [];
 let editingEmployeeId = null;
 let dashboardLoadSequence = 0;
+let currentVisitorsPage = 1;
 const defaultSettings = {
     organizationName: 'UTS Developers',
     adminContactEmail: 'admin@utsdevelopers.com',
@@ -156,6 +157,7 @@ async function loadDashboardData() {
     const loadSequence = ++dashboardLoadSequence;
     const results = await Promise.allSettled([
         getUncheckedVisitors(),
+        getUncheckedVisitorsTotal(),
         getTotalVisitorsToday(),
         getTotalVisitorsThisWeek(),
         getTotalVisitorsThisMonth(),
@@ -165,22 +167,29 @@ async function loadDashboardData() {
     ]);
     if (loadSequence !== dashboardLoadSequence) return;
 
-    const value = (index) => results[index].status === 'fulfilled' ? results[index].value : 0;
-    const employeeRecords = getCollection(value(5)).map(normalizeEmployee);
-    const userRecords = getCollection(value(6)).map(normalizeUser);
-    const visitorHistory = getCollection(value(4)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
+    const value = (index) => results[index].status === 'fulfilled' ? results[index].value : null;
+    const employeeRecords = getCollection(value(6)).map(normalizeEmployee);
+    const userRecords = getCollection(value(7)).map(normalizeUser);
+    const visitorHistory = getCollection(value(5)).map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
 
-    dashboardData.visitorsToday = getCount(value(1));
-    dashboardData.visitorsThisWeek = getCount(value(2));
-    dashboardData.visitorsThisMonth = getCount(value(3));
-    dashboardData.totalVisitors = getCount(value(4)) || visitorHistory.length;
-    dashboardData.totalEmployees = employeeRecords.length || getCount(value(5));
+    dashboardData.visitorsToday = getCount(value(2));
+    dashboardData.visitorsThisWeek = getCount(value(3));
+    dashboardData.visitorsThisMonth = getCount(value(4));
+    dashboardData.totalVisitors = getCount(value(5)) || visitorHistory.length;
+    dashboardData.totalEmployees = employeeRecords.length || getCount(value(6));
     const uncheckedVisitors = getCollection(value(0))
         .map((visitor) => normalizeVisitor(visitor, employeeRecords, userRecords));
     dashboardData.currentVisitors = Array.from(
         new Map(uncheckedVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
     );
-    dashboardData.visitorsCheckedIn = dashboardData.currentVisitors.length;
+    const apiCheckedInTotal = value(1);
+    dashboardData.visitorsCheckedIn = Number.isFinite(apiCheckedInTotal) && apiCheckedInTotal !== null
+        ? apiCheckedInTotal
+        : dashboardData.currentVisitors.length;
+    currentVisitorsPage = Math.min(
+        currentVisitorsPage,
+        Math.max(1, Math.ceil(dashboardData.currentVisitors.length / 10))
+    );
     dashboardData.visitorHistory = visitorHistory;
     renderDashboard();
 }
@@ -565,8 +574,12 @@ function setupEmployeeManagement() {
 function renderCurrentVisitors() {
     const tableBody = document.getElementById('current-visitors-body');
     const emptyMessage = document.getElementById('empty-message');
+    const pageSize = 10;
+    const totalPages = Math.max(1, Math.ceil(dashboardData.currentVisitors.length / pageSize));
+    const pageStart = (currentVisitorsPage - 1) * pageSize;
+    const visibleVisitors = dashboardData.currentVisitors.slice(pageStart, pageStart + pageSize);
 
-    tableBody.innerHTML = dashboardData.currentVisitors.map((visitor) => `
+    tableBody.innerHTML = visibleVisitors.map((visitor) => `
         <tr>
             <td>
                 <span class="visitor-name">${visitor.first_name} ${visitor.last_name}</span>
@@ -581,6 +594,10 @@ function renderCurrentVisitors() {
     `).join('');
 
     emptyMessage.hidden = dashboardData.currentVisitors.length > 0;
+    document.getElementById('current-visitors-page').textContent =
+        `Page ${currentVisitorsPage} of ${totalPages}`;
+    document.getElementById('current-visitors-previous').disabled = currentVisitorsPage === 1;
+    document.getElementById('current-visitors-next').disabled = currentVisitorsPage === totalPages;
 }
 
 function renderVisitorHistory() {
@@ -654,6 +671,19 @@ document.getElementById('refresh-button')
     } finally {
         refreshButton.disabled = false;
         refreshButton.textContent = originalLabel;
+    }
+});
+document.getElementById('current-visitors-previous').addEventListener('click', () => {
+    if (currentVisitorsPage > 1) {
+        currentVisitorsPage -= 1;
+        renderCurrentVisitors();
+    }
+});
+document.getElementById('current-visitors-next').addEventListener('click', () => {
+    const totalPages = Math.max(1, Math.ceil(dashboardData.currentVisitors.length / 10));
+    if (currentVisitorsPage < totalPages) {
+        currentVisitorsPage += 1;
+        renderCurrentVisitors();
     }
 });
 setupNavigation();
