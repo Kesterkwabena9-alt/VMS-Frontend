@@ -45,7 +45,18 @@ function getVisitorHistory() {
 
 function getCollection(response) {
     if (Array.isArray(response)) return response;
-    return response?.content || response?.data || response?.items || [];
+    if (!response || typeof response !== 'object') return [];
+
+    for (const key of ['content', 'items', 'results', 'visitors', 'data']) {
+        const nested = response[key];
+        if (Array.isArray(nested)) return nested;
+        if (nested && typeof nested === 'object' && nested !== response) {
+            const collection = getCollection(nested);
+            if (collection.length > 0) return collection;
+        }
+    }
+
+    return [];
 }
 
 function getCount(response) {
@@ -56,8 +67,9 @@ function getCount(response) {
 
 function isCurrentVisitor(visitor) {
     const status = String(visitor.status || visitor.visitStatus || '').toLowerCase().replace(/[-\s]/g, '_');
-    return !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.checkOutAt &&
-        !visitor.check_out_at && !visitor.checked_out_at &&
+    const checkedOut = visitor.checkedOut === true || visitor.checked_out === true;
+    return !checkedOut && !visitor.checkOutTime && !visitor.checkedOutAt && !visitor.checkOutAt &&
+        !visitor.checked_out_time && !visitor.check_out_time && !visitor.check_out_at && !visitor.checked_out_at &&
         !['checked_out', 'checkout', 'completed'].includes(status);
 }
 
