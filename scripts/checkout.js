@@ -39,6 +39,12 @@ function getCheckInTime(visitor) {
         visitor?.checked_in_at || visitor?.checked_in_time;
 }
 
+function getCheckOutTime(visitor) {
+    return visitor?.checkOutTime || visitor?.checkoutTime || visitor?.checkedOutTime ||
+        visitor?.checkedOutAt || visitor?.checkOutAt || visitor?.checked_out_at ||
+        visitor?.check_out_time || visitor?.checked_out_time;
+}
+
 function formatCheckInTime(value) {
     return value === undefined || value === null || value === '' ? '-' : String(value);
 }
@@ -48,7 +54,12 @@ async function findActiveVisitor(tag) {
     const visitors = responses.flatMap((result) => result.status === 'fulfilled'
         ? getVisitorCollection(result.value)
         : []);
-    return visitors.find((visitor) => String(getVisitorTag(visitor)).trim() === String(tag).trim());
+    return visitors.find((visitor) => {
+        const checkoutTime = getCheckOutTime(visitor);
+        const status = String(visitor.status || visitor.visitStatus || '').toLowerCase();
+        return String(getVisitorTag(visitor)).trim() === String(tag).trim() &&
+            !checkoutTime && !['checked out', 'checked_out', 'checkout', 'completed'].includes(status);
+    });
 }
 
 async function resolveHost(visitor) {
@@ -72,33 +83,38 @@ searchForm.addEventListener('submit', async (event) => {
     if (!tag) return;
 
     checkoutButton.disabled = true;
+    const submitButton = searchForm.querySelector('button[type="submit"]');
+    const originalLabel = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Checking out...';
     searchMessage.textContent = '';
     checkoutMessage.textContent = 'Checking out visitor...';
     try {
-        const activeVisitor = await findActiveVisitor(tag);
+        const activeVisitor = await findActiveVisitor(tag) ;
         const response = await checkOutVisitor(tag);
         const checkoutRecord = response && typeof response === 'object'
             ? (response.data && typeof response.data === 'object' ? response.data : response)
             : {};
         const visitor = { ...(activeVisitor || {}), ...checkoutRecord };
+        const checkoutTime = getCheckOutTime(visitor) || new Date().toISOString();
         const host = await resolveHost(visitor);
         const personVisited = visitor.person_to_see || visitor.personToSee || visitor.personVisited || getHostName(host);
         const department = visitor.department || visitor.departmentName || host?.department || host?.departmentName || '-';
         const purpose = visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '-';
-        const returnedTag = typeof response === 'string' || typeof response === 'number'
-            ? response
-            : getVisitorTag(visitor) || tag;
         detailsCard.hidden = false;
         const visitorName = `${visitor.firstName || visitor.first_name || ''} ${visitor.lastName || visitor.last_name || ''}`.trim();
         document.getElementById('visitor-name').textContent = visitorName || 'Visitor checked out';
-        document.getElementById('visitor-tag').textContent = returnedTag;
+        document.getElementById('visitor-tag').textContent = tag;
         document.getElementById('person-visited').textContent = personVisited || '-';
         document.getElementById('department').textContent = department;
         document.getElementById('purpose').textContent = purpose;
         document.getElementById('check-in-time').textContent = formatCheckInTime(getCheckInTime(visitor));
         document.getElementById('visit-duration').textContent = '-';
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
-        checkoutMessage.textContent = `Visitor with tag ${returnedTag} has been checked out successfully.`;
+        const checkoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
+        checkoutTimes[tag] = checkoutTime;
+        localStorage.setItem('vms-checkout-times', JSON.stringify(checkoutTimes));
+        checkoutMessage.textContent = response === null || response === undefined ? 'Checked out' : String(response);
         tagInput.value = '';
     } catch (error) {
         const details = error.details
@@ -107,6 +123,9 @@ searchForm.addEventListener('submit', async (event) => {
         checkoutMessage.textContent = `${error.message || 'Unable to check out the visitor.'}${details}`;
         searchMessage.textContent = error.message || 'Unable to check out the visitor.';
         checkoutButton.disabled = false;
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel;
     }
 });
 

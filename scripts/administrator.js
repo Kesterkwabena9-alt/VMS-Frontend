@@ -95,6 +95,12 @@ function normalizeVisitor(visitor, employees = [], users = []) {
     const hostReference = visitor.host ?? visitor.hostId ?? visitor.employee ?? visitor.employeeId;
     const checkedInByReference = visitor.checkedInByUser ?? visitor.checkedInBy ?? visitor.userId ?? visitor.checkedInById;
 
+    const visitorTag = visitor.tag ?? visitor.tagNumber ?? visitor.tag_number;
+    const storedCheckoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
+    const storedCheckoutTime = visitorTag === undefined || visitorTag === null
+        ? undefined
+        : storedCheckoutTimes[String(visitorTag)];
+
     return {
         ...visitor,
         firstName: visitor.firstName || visitor.firstname || visitor.first_name || '',
@@ -114,10 +120,10 @@ function normalizeVisitor(visitor, employees = [], users = []) {
         checked_in_by: visitor.checked_in_by || visitor.checkedInByName ||
             findReferenceName(checkedInByReference, users, 'Visitor self-service'),
         checkedInTime: visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_at || visitor.checked_in_time,
-        checkOutTime: visitor.checkOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_at,
+        checkOutTime: visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.checked_out_at || visitor.check_out_time || visitor.checked_out_time || storedCheckoutTime,
         checked_in_at: visitor.checked_in_at || visitor.checkedInTime || visitor.checkedInAt || visitor.checkInTime || visitor.checked_in_time,
-        checked_out_at: visitor.checked_out_at || visitor.checkOutTime || visitor.checkedOutAt || visitor.checkOutAt,
-        status: visitor.status || visitor.visitStatus || (visitor.checkOutTime || visitor.checked_out_at ? 'Checked out' : 'Checked in')
+        checked_out_at: visitor.checked_out_at || visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checkedOutAt || visitor.checkOutAt || visitor.check_out_time || visitor.checked_out_time || storedCheckoutTime,
+        status: visitor.status || visitor.visitStatus || (visitor.checkOutTime || visitor.checkoutTime || visitor.checkedOutTime || visitor.checked_out_at || storedCheckoutTime ? 'Checked out' : 'Checked in')
     };
 }
 
@@ -374,6 +380,8 @@ function setupUserManagement() {
         }
 
         userSubmit.disabled = true;
+        const originalSubmitLabel = document.getElementById('user-submit-label').textContent;
+        document.getElementById('user-submit-label').textContent = 'Saving...';
         try {
             if (editingUserId !== null && editingUserId !== undefined) {
                 const userData = { firstname: firstName, lastname: lastName, email, role };
@@ -392,6 +400,7 @@ function setupUserManagement() {
             alert(`${error.message || 'Unable to save user.'}${details}`);
         } finally {
             userSubmit.disabled = false;
+            document.getElementById('user-submit-label').textContent = originalSubmitLabel;
         }
     });
 
@@ -463,7 +472,10 @@ function resetEmployeeForm() {
 }
 
 function setupEmployeeManagement() {
-    document.getElementById('employee-form').addEventListener('submit', async (event) => {
+    const employeeForm = document.getElementById('employee-form');
+    const employeeSubmit = employeeForm.querySelector('.user-submit');
+
+    employeeForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const employeeData = {
             firstName: document.getElementById('employee-first-name').value.trim(),
@@ -473,6 +485,9 @@ function setupEmployeeManagement() {
             phoneNumber: document.getElementById('employee-phone').value.trim()
         };
 
+        const originalSubmitLabel = document.getElementById('employee-submit-label').textContent;
+        employeeSubmit.disabled = true;
+        document.getElementById('employee-submit-label').textContent = 'Saving...';
         try {
             if (editingEmployeeId !== null && editingEmployeeId !== undefined) {
                 await updateEmployee(editingEmployeeId, employeeData);
@@ -483,6 +498,9 @@ function setupEmployeeManagement() {
         } catch (error) {
             const details = error.details ? `\n${typeof error.details === 'string' ? error.details : JSON.stringify(error.details)}` : '';
             alert(`${error.message || 'Unable to save employee.'}${details}`);
+        } finally {
+            employeeSubmit.disabled = false;
+            document.getElementById('employee-submit-label').textContent = originalSubmitLabel;
         }
     });
 
@@ -601,7 +619,16 @@ function renderDashboard() {
 
 document.getElementById('refresh-button')
 .addEventListener('click', async () => {
-    await loadDashboardData();
+    const refreshButton = document.getElementById('refresh-button');
+    const originalLabel = refreshButton.textContent;
+    refreshButton.disabled = true;
+    refreshButton.textContent = 'Refreshing...';
+    try {
+        await loadDashboardData();
+    } finally {
+        refreshButton.disabled = false;
+        refreshButton.textContent = originalLabel;
+    }
 });
 setupNavigation();
 setupUserManagement();

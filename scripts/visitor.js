@@ -134,6 +134,8 @@ if (visitorForm) {
     }
 
     async function loadEmployeeOptions() {
+        employeeSelect.disabled = true;
+        employeeSelect.replaceChildren(new Option('Loading employees...', '', true, true));
         try {
             const employees = getEmployeeCollection(await getAllEmployees());
             employeeSelect.replaceChildren(new Option('Select an employee', '', true, true));
@@ -147,6 +149,7 @@ if (visitorForm) {
             if (employeeSelect.options.length === 1) {
                 employeeSelect.replaceChildren(new Option('No employees available', '', true, true));
             }
+            employeeSelect.disabled = false;
         } catch (error) {
             const message = error.message || 'Unable to load employees';
             employeeSelect.replaceChildren(new Option(message, '', true, true));
@@ -174,6 +177,8 @@ if (visitorForm) {
         const submitButton = visitorForm.querySelector('.submit-button');
 
         submitButton.disabled = true;
+        const originalLabel = submitButton.textContent;
+        submitButton.textContent = workflow === 'check-out' ? 'Checking out...' : 'Checking in...';
         try {
             const visitor = {
                 firstName: document.getElementById('first_name').value.trim(),
@@ -193,6 +198,7 @@ if (visitorForm) {
             alert(error.message || 'Unable to process the visitor request.');
         } finally {
             submitButton.disabled = false;
+            submitButton.textContent = originalLabel;
         }
     });
 }
