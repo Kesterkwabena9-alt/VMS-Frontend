@@ -155,6 +155,7 @@ async function loadDashboardData() {
     dashboardData.currentVisitors = Array.from(
         new Map(currentVisitors.map((visitor) => [getVisitorKey(visitor), visitor])).values()
     );
+    dashboardData.visitorsCheckedIn = dashboardData.currentVisitors.length;
     dashboardData.visitorHistory = visitorHistory;
     renderDashboard();
 }

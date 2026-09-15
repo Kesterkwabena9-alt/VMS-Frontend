@@ -1,8 +1,6 @@
 const searchForm = document.getElementById('search-form');
 const tagInput = document.getElementById('tag-number');
 const searchMessage = document.getElementById('search-message');
-const detailsCard = document.getElementById('visitor-details');
-const checkoutButton = document.getElementById('checkout-button');
 const checkoutMessage = document.getElementById('checkout-message');
 
 function updateDateTime() {
@@ -28,44 +26,10 @@ function getVisitorTag(visitor) {
     return visitor?.tag ?? visitor?.tagNumber ?? visitor?.tag_number;
 }
 
-function getHostReference(visitor) {
-    return visitor?.host ?? visitor?.hostId ?? visitor?.employee ?? visitor?.employeeId;
-}
-
-function getHostName(host) {
-    if (!host) return '';
-    if (typeof host === 'string' || typeof host === 'number') return String(host);
-    const firstName = host.firstName ?? host.firstname ?? host.first_name ?? '';
-    const lastName = host.lastName ?? host.lastname ?? host.last_name ?? '';
-    return host.name || `${firstName} ${lastName}`.trim() || host.email || '';
-}
-
-function getCheckInTime(visitor) {
-    return visitor?.checkedInTime || visitor?.checkedInAt || visitor?.checkInTime ||
-        visitor?.checked_in_at || visitor?.checked_in_time;
-}
-
 function getCheckOutTime(visitor) {
     return visitor?.checkOutTime || visitor?.checkoutTime || visitor?.checkedOutTime ||
         visitor?.checkedOutAt || visitor?.checkOutAt || visitor?.checked_out_at ||
         visitor?.check_out_time || visitor?.checked_out_time;
-}
-
-function formatCheckInTime(value) {
-    return value === undefined || value === null || value === '' ? '-' : String(value);
-}
-
-function renderVisitorDetails(visitor, tag, host) {
-    const visitorName = `${visitor.firstName || visitor.firstname || visitor.first_name || ''} ${visitor.lastName || visitor.lastname || visitor.last_name || ''}`.trim();
-    const personVisited = visitor.person_to_see || visitor.personToSee || visitor.personVisited || visitor.hostName || getHostName(host);
-    const purpose = visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '-';
-
-    detailsCard.hidden = false;
-    document.getElementById('visitor-name').textContent = visitorName || '-';
-    document.getElementById('visitor-tag').textContent = tag;
-    document.getElementById('person-visited').textContent = personVisited || '-';
-    document.getElementById('purpose').textContent = purpose;
-    document.getElementById('check-in-time').textContent = formatCheckInTime(getCheckInTime(visitor));
 }
 
 async function findActiveVisitor(tag) {
@@ -85,32 +49,11 @@ async function findActiveVisitor(tag) {
     });
 }
 
-async function resolveHost(visitor) {
-    const hostReference = getHostReference(visitor);
-    if (hostReference && typeof hostReference === 'object') return hostReference;
-
-    const hostId = hostReference;
-    if (hostId === undefined || hostId === null || hostId === '') return null;
-
-    try {
-        return await getEmployeeById(hostId);
-    } catch (error) {
-        try {
-            const employees = getVisitorCollection(await getAllEmployees());
-            return employees.find((employee) => String(employee.id ?? employee.employeeId ?? employee.employee_id) === String(hostId)) || null;
-        } catch (employeeError) {
-            console.warn('Unable to load visitor host details:', employeeError);
-            return null;
-        }
-    }
-}
-
 searchForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const tag = tagInput.value.trim();
     if (!tag) return;
 
-    checkoutButton.disabled = true;
     const submitButton = searchForm.querySelector('button[type="submit"]');
     const originalLabel = submitButton.textContent;
     submitButton.disabled = true;
@@ -118,18 +61,13 @@ searchForm.addEventListener('submit', async (event) => {
     searchMessage.textContent = '';
     checkoutMessage.textContent = 'Checking out visitor...';
     try {
-        const activeVisitor = await findActiveVisitor(tag) ;
-        let host = activeVisitor ? await resolveHost(activeVisitor) : null;
-        if (activeVisitor) renderVisitorDetails(activeVisitor, tag, host);
+        const activeVisitor = await findActiveVisitor(tag);
         const response = await checkOutVisitor(tag);
         const checkoutRecord = response && typeof response === 'object'
             ? (response.data && typeof response.data === 'object' ? response.data : response)
             : {};
         const visitor = { ...(activeVisitor || {}), ...checkoutRecord };
-        if (!host) host = await resolveHost(visitor);
         const checkoutTime = getCheckOutTime(visitor) || new Date().toISOString();
-        if (!activeVisitor) renderVisitorDetails(visitor, tag, host);
-        document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
         const checkoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
         checkoutTimes[tag] = checkoutTime;
         localStorage.setItem('vms-checkout-times', JSON.stringify(checkoutTimes));
@@ -141,7 +79,6 @@ searchForm.addEventListener('submit', async (event) => {
             : '';
         checkoutMessage.textContent = `${error.message || 'Unable to check out the visitor.'}${details}`;
         searchMessage.textContent = error.message || 'Unable to check out the visitor.';
-        checkoutButton.disabled = false;
     } finally {
         submitButton.disabled = false;
         submitButton.textContent = originalLabel;
