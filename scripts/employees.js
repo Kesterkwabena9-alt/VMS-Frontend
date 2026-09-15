@@ -24,9 +24,7 @@ async function getEmployeeById(employeeId) {
  * Get All Employees
  */
 async function getAllEmployees() {
-    return await apiRequest(
-        "/v1/employees"
-    );
+    return await getAllPages("/v1/employees");
 }
 
 /**

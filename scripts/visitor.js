@@ -32,20 +32,14 @@ async function checkOutVisitor(
  * Get All Visitors
  */
 async function getAllVisitors() {
-
-    return await apiRequest(
-        "/v1/visitors"
-    );
+    return await getAllPages("/v1/visitors");
 }
 
 /**
  * Get Unchecked Visitors
  */
 async function getUncheckedVisitors() {
-
-    return await apiRequest(
-        "/v1/visitors/unchecked"
-    );
+    return await getAllPages("/v1/visitors/unchecked");
 }
 
 /**

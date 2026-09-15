@@ -26,10 +26,7 @@ async function getUserById(userId) {
  * Get All Users
  */
 async function getAllUsers() {
-
-    return await apiRequest(
-        "/v1/users"
-    );
+    return await getAllPages("/v1/users");
 }
 
 /**
