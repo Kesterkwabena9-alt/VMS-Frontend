@@ -139,22 +139,25 @@ function getExpirationTime() {
 function getTokenExpirationTime() {
     const token = getToken();
     if (token) {
+        const tokenParts = token.split('.');
         try {
-            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const encodedPayload = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const paddedPayload = encodedPayload.padEnd(encodedPayload.length + (4 - encodedPayload.length % 4) % 4, '=');
+            const payload = JSON.parse(atob(paddedPayload));
             if (typeof payload.exp === 'number') return payload.exp * 1000;
         } catch {
-            // Fall back to the expiration value returned by the API.
+            return null;
         }
+
+        if (tokenParts.length === 3) return null;
     }
 
     const storedExpiration = getExpirationTime();
     if (!storedExpiration) return null;
     const numericExpiration = Number(storedExpiration);
-    if (Number.isFinite(numericExpiration)) {
-        return numericExpiration < 1e12 ? numericExpiration * 1000 : numericExpiration;
-    }
+    if (Number.isFinite(numericExpiration) && numericExpiration >= 1e12) return numericExpiration;
 
-    const parsedExpiration = Date.parse(storedExpiration);
+    const parsedExpiration = /[-T:]/.test(storedExpiration) ? Date.parse(storedExpiration) : NaN;
     return Number.isNaN(parsedExpiration) ? null : parsedExpiration;
 }
 

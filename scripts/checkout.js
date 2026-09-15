@@ -18,6 +18,9 @@ function getVisitorCollection(response) {
     if (Array.isArray(response?.content)) return response.content;
     if (Array.isArray(response?.data)) return response.data;
     if (Array.isArray(response?.items)) return response.items;
+    if (response?.data && typeof response.data === 'object') return [response.data];
+    if (response?.visitor && typeof response.visitor === 'object') return [response.visitor];
+    if (response?.result && typeof response.result === 'object') return [response.result];
     return response && typeof response === 'object' ? [response] : [];
 }
 
@@ -52,8 +55,25 @@ function formatCheckInTime(value) {
     return value === undefined || value === null || value === '' ? '-' : String(value);
 }
 
+function renderVisitorDetails(visitor, tag, host) {
+    const visitorName = `${visitor.firstName || visitor.firstname || visitor.first_name || ''} ${visitor.lastName || visitor.lastname || visitor.last_name || ''}`.trim();
+    const personVisited = visitor.person_to_see || visitor.personToSee || visitor.personVisited || visitor.hostName || getHostName(host);
+    const purpose = visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '-';
+
+    detailsCard.hidden = false;
+    document.getElementById('visitor-name').textContent = visitorName || '-';
+    document.getElementById('visitor-tag').textContent = tag;
+    document.getElementById('person-visited').textContent = personVisited || '-';
+    document.getElementById('purpose').textContent = purpose;
+    document.getElementById('check-in-time').textContent = formatCheckInTime(getCheckInTime(visitor));
+}
+
 async function findActiveVisitor(tag) {
-    const responses = await Promise.allSettled([getUncheckedVisitors(), getAllVisitors()]);
+    const responses = await Promise.allSettled([
+        getUncheckedVisitors(),
+        getAllVisitors(),
+        searchVisitors(tag)
+    ]);
     const visitors = responses.flatMap((result) => result.status === 'fulfilled'
         ? getVisitorCollection(result.value)
         : []);
@@ -99,24 +119,16 @@ searchForm.addEventListener('submit', async (event) => {
     checkoutMessage.textContent = 'Checking out visitor...';
     try {
         const activeVisitor = await findActiveVisitor(tag) ;
+        let host = activeVisitor ? await resolveHost(activeVisitor) : null;
+        if (activeVisitor) renderVisitorDetails(activeVisitor, tag, host);
         const response = await checkOutVisitor(tag);
         const checkoutRecord = response && typeof response === 'object'
             ? (response.data && typeof response.data === 'object' ? response.data : response)
             : {};
         const visitor = { ...(activeVisitor || {}), ...checkoutRecord };
+        if (!host) host = await resolveHost(visitor);
         const checkoutTime = getCheckOutTime(visitor) || new Date().toISOString();
-        const host = await resolveHost(visitor);
-        const personVisited = visitor.person_to_see || visitor.personToSee || visitor.personVisited || getHostName(host);
-        const department = visitor.department || visitor.departmentName || host?.department || host?.departmentName || '-';
-        const purpose = visitor.purpose || visitor.purposeOfVisit || visitor.purpose_of_visit || '-';
-        detailsCard.hidden = false;
-        const visitorName = `${visitor.firstName || visitor.first_name || ''} ${visitor.lastName || visitor.last_name || ''}`.trim();
-        document.getElementById('visitor-name').textContent = visitorName || 'Visitor checked out';
-        document.getElementById('visitor-tag').textContent = tag;
-        document.getElementById('person-visited').textContent = personVisited || '-';
-        document.getElementById('department').textContent = department;
-        document.getElementById('purpose').textContent = purpose;
-        document.getElementById('check-in-time').textContent = formatCheckInTime(getCheckInTime(visitor));
+        if (!activeVisitor) renderVisitorDetails(visitor, tag, host);
         document.getElementById('status-badge').innerHTML = '<span></span> Checked Out';
         const checkoutTimes = JSON.parse(localStorage.getItem('vms-checkout-times') || '{}');
         checkoutTimes[tag] = checkoutTime;
